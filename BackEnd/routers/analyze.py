@@ -57,8 +57,8 @@ def run_recommendation(
 @router.post("/save-recommendation/")
 def save_recommendation(payload: RecommendationPayload, db: Session = Depends(get_db)):
     try:
-        user_id = payload.user_info.user_id
-        request_id = payload.user_info.request_id
+        user_id = int(payload.user_info.user_id)
+        request_id = int(payload.user_info.request_id)
         print(f"[DEBUG] /save-recommendation/ 진입 - user_id: {user_id}, request_id: {request_id}")
 
         request_info = db.query(Request).filter_by(user_id=user_id, request_id=request_id).first()

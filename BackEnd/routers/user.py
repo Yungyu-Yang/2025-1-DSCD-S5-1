@@ -278,7 +278,7 @@ def get_hair_recommendations(
     # 추천 결과 DB 조회 (사용자 ID와 요청 ID로 필터링)
     hairs = db.query(HairRecommendation).filter(
         HairRecommendation.request_id == request_id,
-        HairRecommendation.user_id == current_user["user_id"]
+        HairRecommendation.user_id == user_id
     ).all()
 
     # 디버깅 로그: 조회된 추천 결과 수 확인
