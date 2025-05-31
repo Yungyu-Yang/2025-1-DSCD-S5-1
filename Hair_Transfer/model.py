@@ -11,6 +11,9 @@ from ref_encoder.adapter import *
 from ref_encoder.reference_unet import ref_unet
 from utils.pipeline import StableHairPipeline
 from utils.pipeline_cn import StableDiffusionControlNetPipeline
+import io
+import uuid
+# from rembg import remove # rembg 임포트 제거됨
 
 torch.cuda.empty_cache()
 torch.cuda.ipc_collect()
@@ -84,6 +87,11 @@ class StableHair:
         set_scale(self.pipeline.unet, scale)
         generator = torch.Generator(device="cuda")
         generator.manual_seed(random_seed)
+        
+        print(f"DEBUG(Hair_Transfer): Running inference with params: steps={step}, guidance={guidance_scale}, scale={scale}, controlnet_scale={controlnet_conditioning_scale}")
+        print(f"DEBUG(Hair_Transfer): source_image shape: {source_image.shape}, dtype: {source_image.dtype}")
+        print(f"DEBUG(Hair_Transfer): reference_image shape: {reference_image.shape}, dtype: {reference_image.dtype}")
+
         sample = self.pipeline(
             prompt,
             negative_prompt=n_prompt,
@@ -97,11 +105,16 @@ class StableHair:
             reference_encoder=self.hair_encoder,
             ref_image=reference_image,
         ).samples
+        
+        print(f"DEBUG(Hair_Transfer): Pipeline returned sample of shape: {sample.shape}, dtype: {sample.dtype}")
         return sample, source_image, reference_image
 
-    def get_bald(self, id_image, scale):
+    def get_bald(self, id_image: Image.Image, scale):
         H, W = id_image.size
         scale = float(scale)
+        
+        print(f"DEBUG(get_bald): Generating bald image for input size: {id_image.size}, scale: {scale}")
+
         image = self.remove_hair_pipeline(
             prompt="",
             negative_prompt="",
@@ -113,10 +126,11 @@ class StableHair:
             controlnet_conditioning_scale=scale,
             generator=None,
         ).images[0]
-
+        
+        print(f"DEBUG(get_bald): Bald image generated, type: {type(image)}, size: {image.size}")
         return image
 
-def resize_with_padding(image, target_size=(512, 512), fill_color=(0, 0, 0)):
+def resize_with_padding(image: Image.Image, target_size=(512, 512), fill_color=(0, 0, 0)):
     original_size = image.size
     ratio = min(target_size[0] / original_size[0], target_size[1] / original_size[1])
     new_size = (int(original_size[0] * ratio), int(original_size[1] * ratio))
@@ -128,34 +142,75 @@ def resize_with_padding(image, target_size=(512, 512), fill_color=(0, 0, 0)):
     return new_image
 
 
-def model_call(id_image_path, ref_hair_path, converter_scale=1, scale=1, guidance_scale=1.5, controlnet_conditioning_scale=1):
-
-    # 모델 불러오기
+def model_call(id_image_buf: io.BytesIO, ref_hair_buf: io.BytesIO, converter_scale=1, scale=1, guidance_scale=1.5, controlnet_conditioning_scale=1):
+    """
+    주어진 이미지 버퍼들을 사용하여 헤어 전송 모델을 호출하고 결과를 반환합니다.
+    어떤 이미지에도 배경 제거 전처리는 수행하지 않습니다.
+    """
     model = StableHair(config="./configs/hair_transfer.yaml", weight_dtype=torch.float16)
+    print("DEBUG(model_call): StableHair model initialized.")
 
-    # # Your ML logic goes here
-    id_image = Image.open(id_image_path).convert("RGB")
-    ref_hair = Image.open(ref_hair_path).convert("RGB")
-    id_image = np.array(id_image).astype("uint8")
-    ref_hair = np.array(ref_hair).astype("uint8")
+    # BytesIO 객체에서 이미지 로드
+    id_image = Image.open(id_image_buf).convert("RGB")
+    ref_hair = Image.open(ref_hair_buf).convert("RGB")
+    print(f"DEBUG(model_call): Input id_image loaded: size={id_image.size}, mode={id_image.mode}")
+    print(f"DEBUG(model_call): Input ref_hair loaded: size={ref_hair.size}, mode={ref_hair.mode}")
 
-    # 3️⃣ 다시 PIL.Image로 변환 (사이즈 조정 등 가능)
-    id_image = resize_with_padding(Image.fromarray(id_image, "RGB"))
-    ref_hair = resize_with_padding(Image.fromarray(ref_hair, "RGB"))
+    # --- 배경 제거 로직 완전히 제거됨 ---
+    print("DEBUG(model_call): No background removal is applied to any image.")
 
+    # 이제 id_image와 ref_hair 모두 원본 그대로입니다.
+    # resize_with_padding 적용
+    id_image = resize_with_padding(id_image)
+    ref_hair = resize_with_padding(ref_hair) 
+
+    # 디버깅을 위해 resize_with_padding 후 이미지 저장
+    try:
+        temp_id_path = f"/tmp/debug_resized_id_image_{uuid.uuid4().hex}.png"
+        temp_ref_path = f"/tmp/debug_resized_ref_image_{uuid.uuid4().hex}.png"
+        id_image.save(temp_id_path)
+        ref_hair.save(temp_ref_path)
+        print(f"DEBUG(model_call): Resized images saved to: {temp_id_path}, {temp_ref_path}")
+    except Exception as e:
+        print(f"WARNING(model_call): Could not save resized debug images: {e}")
+
+    # 민머리 이미지 생성
     id_image_bald = model.get_bald(id_image, converter_scale)
 
-    id_image_bald = np.array(id_image_bald)
-    ref_hair = np.array(ref_hair)
+    # 디버깅을 위해 민머리 이미지 저장
+    try:
+        temp_bald_path = f"/tmp/debug_bald_image_{uuid.uuid4().hex}.png"
+        id_image_bald.save(temp_bald_path)
+        print(f"DEBUG(model_call): Bald image saved to: {temp_bald_path}")
+    except Exception as e:
+        print(f"WARNING(model_call): Could not save bald debug image: {e}")
 
-    image, source_image, reference_image = model.Hair_Transfer(source_image=id_image_bald,
-                                                               reference_image=ref_hair,
-                                                               random_seed=-1,
-                                                               step=100,
-                                                               guidance_scale=guidance_scale,
-                                                               scale=scale,
-                                                               controlnet_conditioning_scale=controlnet_conditioning_scale
-                                                               )
+    # Hair_Transfer 함수에 전달하기 전에 numpy 배열로 변환
+    id_image_bald_np = np.array(id_image_bald).astype("uint8")
+    ref_hair_np = np.array(ref_hair).astype("uint8")
 
-    image = Image.fromarray((image * 255.).astype(np.uint8))
+    print(f"DEBUG(model_call): Input to Hair_Transfer - id_image_bald_np shape: {id_image_bald_np.shape}, dtype: {id_image_bald_np.dtype}")
+    print(f"DEBUG(model_call): Input to Hair_Transfer - ref_hair_np shape: {ref_hair_np.shape}, dtype: {ref_hair_np.dtype}")
+
+
+    image_sample, _, _ = model.Hair_Transfer(source_image=id_image_bald_np,
+                                             reference_image=ref_hair_np,
+                                             random_seed=-1,
+                                             step=100,
+                                             guidance_scale=guidance_scale,
+                                             scale=scale,
+                                             controlnet_conditioning_scale=controlnet_conditioning_scale
+                                             )
+
+    # 최종 합성 결과 (numpy 배열)를 PIL.Image로 변환
+    image = Image.fromarray((image_sample * 255.).astype(np.uint8))
+
+    # 디버깅을 위해 최종 합성 이미지 저장
+    try:
+        temp_final_path = f"/tmp/debug_final_composite_{uuid.uuid4().hex}.png"
+        image.save(temp_final_path)
+        print(f"DEBUG(model_call): Final composite image saved to: {temp_final_path}")
+    except Exception as e:
+        print(f"WARNING(model_call): Could not save final composite debug image: {e}")
+
     return id_image_bald, image

@@ -1,26 +1,34 @@
-from model import StableHair
-from model import model_call
-import cv2
-import torch
-from PIL import Image
-import numpy as np
+# main.py
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from services import run_stablehair_logic
+import traceback
+from dotenv import load_dotenv
 
-id = '123'
+load_dotenv() 
 
-# 샘플 이미지
-source_img = './test_imgs/ID/sample.jpg'
-ref_img = './test_imgs/Ref/sample.jpg'
+class StableHairRequest(BaseModel):
+    user_id:    int
+    request_id: int
 
-# Stable-hair 결과 생성
-bald_image, result_image = model_call(source_img, ref_img)
+class Config:
+    extra = "ignore"  # 🔥 핵심! 모델에 없는 필드는 무시
+    
 
-if isinstance(result_image, Image.Image):
-    result_image = cv2.cvtColor(np.array(result_image), cv2.COLOR_RGB2BGR)
-if isinstance(bald_image, Image.Image):
-    bald_image = cv2.cvtColor(np.array(bald_image), cv2.COLOR_RGB2BGR)
+app = FastAPI()
 
-# 결과 저장
-cv2.imwrite(f'./output/bald/{id}_bald.png', bald_image)
-cv2.imwrite(f'./output/result/{id}_result.png', result_image)
+@app.get("/run-stablehair/{user_id}/{request_id}")
+async def run_stablehair_get(user_id: int, request_id: int):
+    print(f"▶ [run_stablehair_get] received user_id={user_id}, request_id={request_id}")
+    return run_stablehair_logic(user_id, request_id)
 
-print("결과 이미지가 저장되었습니다.")
+@app.post("/run-stablehair")
+async def run_stablehair(req: StableHairRequest):
+    print(f"▶ [run_stablehair_post] received user_id={req.user_id}, request_id={req.request_id}")
+    try:
+        result = run_stablehair_logic(req.user_id, req.request_id)
+        return {"status": "success", "result": result}
+    except Exception as e:
+        print("🔥 Error in /run-stablehair/ 🔥")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

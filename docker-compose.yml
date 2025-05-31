@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  main-api:
+    image: leeseolhoo/main-api:0531 
+    container_name: main-api
+    ports:
+      - "8000:8000"
+    networks:
+      - dscd-network
+    env_file:
+      - ./BackEnd/.env
+
+  face-extractor:
+    image: seonyeoljeong/extract_face:0526
+    container_name: face-extractor
+    ports:
+      - "8001:8001" 
+    networks:
+      - dscd-network
+
+  graphrag:
+    image: leeseolhoo/graphrag:0531
+    container_name: graphrag
+    ports:
+      - "8002:8002"
+    networks:
+      - dscd-network
+    env_file:
+      - ./graphragREC/.env 
+
+  stable-hair:
+    image: leeseolhoo/stable_hair:0531 
+    container_name: stable-hair
+    ports:
+      - "8003:8003"
+    networks:
+      - dscd-network
+    environment: 
+      - MAIN_API_URL=http://main-api:8000
+    env_file:
+      - ./Hair_Transfer/.env 
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+networks:
+  dscd-network:
