@@ -1,0 +1,27 @@
+# Python 캐시
+__pycache__/
+*.py[cod]
+
+# 가상환경
+stable_hair_venv/
+venv/
+env/
+
+# Expo/React Native 로컬 설정
+.expo/
+
+# 환경변수 파일
+.env
+
+# 인증서/개인키
+*.pem
+
+# 대용량 모델 체크포인트
+models/
+checkpoints/
+
+# macOS 파일 메타데이터
+.DS_Store
+
+# 기타 로그
+*.log
