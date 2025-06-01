@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { authService } from '../services/authService';
+import api from '../config/api';
+import { Feather } from '@expo/vector-icons';
 
 export default function MyPageHairstyle() {
   const router = useRouter();
   const pathname = usePathname();
   const [userProfile, setUserProfile] = useState(null);
+  const [savedHairstyles, setSavedHairstyles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadUserProfile();
+    loadSavedHairstyles();
   }, []);
 
   const loadUserProfile = async () => {
@@ -26,6 +30,32 @@ export default function MyPageHairstyle() {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadSavedHairstyles = async () => {
+    try {
+      const response = await api.get('/user/saved-hairstyles');
+      setSavedHairstyles(response.data);
+    } catch (error) {
+      console.error('[ERROR] 저장된 헤어스타일 불러오기 실패:', error);
+      Alert.alert('오류', '저장된 헤어스타일 목록을 불러오는데 실패했습니다.');
+    }
+  };
+
+  // 헤어스타일 저장 상태를 토글하는 함수
+  const toggleSaveHair = async (hairRecId) => {
+    try {
+      const response = await api.put(`/user/hair-recommendations/${hairRecId}/toggle-save`);
+      console.log('[INFO] 헤어 저장 상태 토글 성공:', response.data);
+      // 저장 해제 시 목록에서 제거
+      if (!response.data.is_saved) {
+        setSavedHairstyles(prevList => prevList.filter(hair => hair.hair_rec_id !== hairRecId));
+      }
+      // 저장 시에는 이미 목록에 있으므로 별도 추가 로직 불필요 (loadSavedHairstyles에서 가져옴)
+    } catch (error) {
+      console.error('[ERROR] 헤어 저장 상태 토글 실패:', error);
+      Alert.alert('오류', '헤어 저장 상태 변경에 실패했습니다.');
     }
   };
 
@@ -87,26 +117,30 @@ export default function MyPageHairstyle() {
 
       <View style={styles.divider} />
       <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
-        <View style={styles.imageContainer}>
-          <View style={styles.styleCard1}>
-            <Image source={require('../../assets/style_example.png')} style={styles.styleImage1} />
-            <Text style={{ textAlign: 'center' }}>가일컷</Text>
-          </View>
-          <View style={styles.styleCard1}>
-            <Image source={require('../../assets/style_example.png')} style={styles.styleImage1} />
-            <Text style={{ textAlign: 'center' }}>가일컷</Text>
-          </View>
-        </View>
-        <View style={styles.imageContainer}>
-          <View style={styles.styleCard1}>
-            <Image source={require('../../assets/style_example.png')} style={styles.styleImage1} />
-            <Text style={{ textAlign: 'center' }}>가일컷</Text>
-          </View>
-          <View style={styles.styleCard1}>
-            <Image source={require('../../assets/style_example.png')} style={styles.styleImage1} />
-            <Text style={{ textAlign: 'center' }}>가일컷</Text>
-          </View>
-        </View>
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#FFBCC2" style={{ marginTop: 40 }} />
+        ) : savedHairstyles.length === 0 ? (
+          <Text style={{ textAlign: 'center', marginTop: 20, color: '#888' }}>저장된 헤어스타일이 없습니다.</Text>
+        ) : (
+          savedHairstyles.map((style) => (
+            <View key={style.hair_rec_id} style={styles.styleCard}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingHorizontal: 10 }}>
+                 <Text style={styles.styleName}>{style.hair_name}</Text>
+                 <TouchableOpacity onPress={() => toggleSaveHair(style.hair_rec_id)}>
+                   <Feather
+                     name={'bookmark'} // 저장된 항목이므로 항상 채워진 북마크 아이콘
+                     size={24}
+                     color={'#FFBCC2'}
+                   />
+                 </TouchableOpacity>
+               </View>
+              <Image
+                source={{ uri: style.simulation_image_url || '../../assets/style_example.png' }}
+                style={styles.styleImage}
+              />
+            </View>
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -210,6 +244,26 @@ const styles = StyleSheet.create({
   logoutText: {
     color: '#FF8994',
     fontSize: 14,
+  },
+  styleCard: {
+    backgroundColor: '#FFEEEF',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  styleImage: {
+    width: 150,
+    height: 150,
+    resizeMode: 'cover',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  styleName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#3F414E',
   },
 });
 
