@@ -10,7 +10,6 @@ export default function DiscoverResult() {
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
 
-  // ✅ 요청 로직 분리 → 재조회 버튼과 공유 가능
   const fetchResult = () => {
     setLoading(true);
     setError(null);
@@ -46,7 +45,6 @@ export default function DiscoverResult() {
       });
   };
 
-  // ✅ 추천 트리거 함수
   const handleTriggerRecommendation = () => {
     if (!result?.user_id || !result?.request_id) {
       const msg = 'user_id 또는 request_id가 없습니다.';
@@ -62,7 +60,6 @@ export default function DiscoverResult() {
 
     console.log('[DEBUG] 추천 요청 payload:', payload);
 
-    // ✅ Alert로 사용자에게 알림 + 확인 누르면 요청 시작
     Alert.alert(
       '추천 요청 시작',
       `현재 user_id: ${payload.user_id}, request_id: ${payload.request_id}\n\n합성이미지 생성에 평균적으로 3분 정도 소요됩니다.`,
@@ -79,7 +76,6 @@ export default function DiscoverResult() {
     );
   };
 
-  // ✅ 실제 run-stablehair API 요청 함수
   const sendStableHairRequest = (payload) => {
     setLoading(true);
     api.post('/run-stablehair/', payload)
@@ -97,7 +93,7 @@ export default function DiscoverResult() {
   };
 
   useEffect(() => {
-    fetchResult();  // ✅ 최초 진입 시 자동 요청
+    fetchResult();
   }, []);
 
   return (
@@ -141,7 +137,6 @@ export default function DiscoverResult() {
           ) : error ? (
             <>
               <Text style={{ color: 'red', textAlign: 'center', marginTop: 40 }}>{error}</Text>
-              {/* ✅ 재조회 버튼 */}
               <TouchableOpacity
                 onPress={fetchResult}
                 style={{
@@ -169,42 +164,51 @@ export default function DiscoverResult() {
                 <Text style={styles.resultText}><Text style={styles.resultLabel}>추천 염색:</Text> {result.rec_color}</Text>
                 <Text style={styles.resultText}><Text style={styles.resultLabel}>요약:</Text> {result.summary}</Text>
               </View>
+
+              {/* ✅ 추천 받기 버튼 */}
+              <TouchableOpacity onPress={handleTriggerRecommendation} style={styles.startButton}>
+                <View style={styles.startButtonContent}>
+                  <Text style={styles.startButtonText}>추천 받기</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* ✅ 추천 가져오기 버튼 */}
+              <TouchableOpacity
+                onPress={() => router.push('/discover-recomendation')}
+                style={[styles.startButton, { backgroundColor: '#D6A7B1', marginTop: 10 }]}
+              >
+                <View style={styles.startButtonContent}>
+                  <Text style={styles.startButtonText}>추천 가져오기</Text>
+                </View>
+              </TouchableOpacity>
             </>
           ) : null}
-
-          {/* ✅ 추천 트리거 버튼 */}
-          <TouchableOpacity onPress={handleTriggerRecommendation} style={styles.startButton}>
-            <View style={styles.startButtonContent}>
-              <Text style={styles.startButtonText}>추천 받기</Text>
-            </View>
-          </TouchableOpacity>
         </ScrollView>
       </View>
     </View>
   );
 }
 
-// ✅ 스타일 정의 그대로 유지
 const styles = StyleSheet.create({
-  header:{ height:55, flexDirection:'row', justifyContent:'space-between', paddingHorizontal:15, alignItems:'center', backgroundColor:'#FFBCC2' },
-  logoimage:{ width:160, height:45, resizeMode:'contain' },
-  mypageimage:{ width:34, height:33, resizeMode:'contain' },
-  horizontalLine:{ height:1, backgroundColor:'#B7B7B7', width:'100%', marginTop:0, bottom:5 },
-  buttonContainer:{ flexDirection:'row', justifyContent:'space-around', marginHorizontal:20, marginTop:15 },
-  tabItem:{ alignItems:'center', paddingBottom:5, marginHorizontal:15 },
-  tabText:{ fontSize:14, color:'#3F414E', fontWeight:'400' },
-  activeTabText:{ fontWeight:'bold' },
-  underline:{ marginTop:15, height:2, width:'100%', backgroundColor:'#A3A3A3' },
-  text:{ fontSize:16, fontWeight:400, textAlign:'center', top:20 },
-  imageContainer:{ width:'90%', height:300, top:30, borderColor:'#FFBCC2', borderWidth:2, justifyContent:'center', alignItems:'center', alignSelf:'center', marginVertical:20, position:'relative' },
-  exampleImage:{ resizeMode:'cover', width:'100%', height:'100%' },
-  startButton:{ width:'90%', backgroundColor:'#FFBCC2', paddingVertical:17, paddingHorizontal:100, borderRadius:10, marginTop:30, marginHorizontal:30, alignItems:'center' },
-  startButtonText:{ fontSize:14, fontWeight:400, color:'#F6F1FB' },
-  startButtonContent:{ alignItems:'center', flexDirection:'row' },
-  resultText:{ textAlign:'center', marginTop:45, fontSize:16 },
-  outlineSqure:{ borderColor:'#FF0101', width:180, height:258, borderWidth:1, position:'absolute' },
-  resultBox:{ backgroundColor:'#F6F1FB', borderRadius:10, marginHorizontal:20, marginTop:10, padding:20, elevation:2 },
-  resultLabel:{ fontWeight:'bold', color:'#FFBCC2' },
+  header: { height: 55, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 15, alignItems: 'center', backgroundColor: '#FFBCC2' },
+  logoimage: { width: 160, height: 45, resizeMode: 'contain' },
+  mypageimage: { width: 34, height: 33, resizeMode: 'contain' },
+  horizontalLine: { height: 1, backgroundColor: '#B7B7B7', width: '100%', marginTop: 0, bottom: 5 },
+  buttonContainer: { flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: 20, marginTop: 15 },
+  tabItem: { alignItems: 'center', paddingBottom: 5, marginHorizontal: 15 },
+  tabText: { fontSize: 14, color: '#3F414E', fontWeight: '400' },
+  activeTabText: { fontWeight: 'bold' },
+  underline: { marginTop: 15, height: 2, width: '100%', backgroundColor: '#A3A3A3' },
+  text: { fontSize: 16, fontWeight: '400', textAlign: 'center', top: 20 },
+  imageContainer: { width: '90%', height: 300, top: 30, borderColor: '#FFBCC2', borderWidth: 2, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginVertical: 20, position: 'relative' },
+  exampleImage: { resizeMode: 'cover', width: '100%', height: '100%' },
+  startButton: { width: '90%', backgroundColor: '#FFBCC2', paddingVertical: 17, paddingHorizontal: 100, borderRadius: 10, marginTop: 30, marginHorizontal: 30, alignItems: 'center' },
+  startButtonText: { fontSize: 14, fontWeight: '400', color: '#F6F1FB' },
+  startButtonContent: { alignItems: 'center', flexDirection: 'row' },
+  resultText: { textAlign: 'center', marginTop: 45, fontSize: 16 },
+  outlineSqure: { borderColor: '#FF0101', width: 180, height: 258, borderWidth: 1, position: 'absolute' },
+  resultBox: { backgroundColor: '#F6F1FB', borderRadius: 10, marginHorizontal: 20, marginTop: 10, padding: 20, elevation: 2 },
+  resultLabel: { fontWeight: 'bold', color: '#FFBCC2' },
 });
 
 
