@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // const API_BASE_URL = 'http://localhost:8000';  // iOS 시뮬레이터용
 // const API_BASE_URL = 'http://127.0.0.1:8000';  // 웹용
 // const API_BASE_URL = 'http://43.202.9.255:8000'; // 인스턴스 A의 퍼블릭 IP 사용
-const API_BASE_URL = 'http://10.80.5.171:8000'; // 본인 ip 주소로 변경하면 됩니다. ipconfig 명령어로 확인.
+const API_BASE_URL = 'http://192.168.0.19:8000'; // 본인 ip 주소로 변경하면 됩니다. ipconfig 명령어로 확인.
 
 console.log('API Base URL:', API_BASE_URL);
 
