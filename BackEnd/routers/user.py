@@ -53,17 +53,17 @@ class UserResultResponse(BaseModel):
 def trigger_face_extract(user_id, request_id):
     try:
         # [개발용] Docker 내부 통신 주소 사용
-        res = requests.post(
-            "http://extract_face:8001/run-extract/",
-            json={"user_id": user_id, "request_id": request_id},
-            timeout=5
-        )
-        # # [운영용] EC2 고정 IP 사용 시 아래로 교체
         # res = requests.post(
-        #     "http://13.124.74.93:8001/run-extract/",
+        #     "http://extract_face:8001/run-extract/",
         #     json={"user_id": user_id, "request_id": request_id},
         #     timeout=5
         # )
+        # # [운영용] EC2 고정 IP 사용 시 아래로 교체
+        res = requests.post(
+            "http://43.201.129.41:8001/run-extract/",
+            json={"user_id": user_id, "request_id": request_id},
+            timeout=5
+        )
         print(f"[INFO] face_extract 응답: {res.status_code}, {res.text}")
     except Exception as e:
         print(f"[ERROR] face_extract 호출 실패: {e}")
