@@ -264,6 +264,7 @@ class HairRecommendationResponse(BaseModel):
     hair_name: str
     simulation_image_url: str
     description: str
+    is_saved: bool
 
 @router.get("/user/hair-recommendations/{request_id}", response_model=List[HairRecommendationResponse])
 def get_hair_recommendations(
@@ -284,7 +285,7 @@ def get_hair_recommendations(
     # 디버깅 로그: 조회된 추천 결과 수 확인
     print(f"[DEBUG] 조회된 추천 개수: {len(hairs)}")
     for h in hairs:
-        print(f"[DEBUG] 추천: hair_name={h.hair_name}, hair_rec_id={h.hair_rec_id}")
+        print(f"[DEBUG] 추천: hair_name={h.hair_name}, hair_rec_id={h.hair_rec_id}, is_saved={h.is_saved}")
 
     # 추천 결과 응답
     return [
@@ -292,16 +293,20 @@ def get_hair_recommendations(
             "hair_rec_id": h.hair_rec_id,
             "hair_name": h.hair_name,
             "simulation_image_url": h.simulation_image_url,
-            "description": h.description
+            "description": h.description,
+            "is_saved": bool(h.is_saved)
         }
         for h in hairs
     ]
 
 # (2) hair_rec_id로 추천 미용실 리스트 반환 (리뷰수 내림차순 정렬, 스크롤/페이지네이션 지원)
 class HairshopRecommendationResponse(BaseModel):
+    hairshop_rec_id: int
     hairshop: str
     review_count: int
     mean_score: float
+    is_saved: bool
+    associated_hair_name: Optional[str] = None
 
 @router.get("/user/hairshop-recommendations/{hair_rec_id}", response_model=List[HairshopRecommendationResponse])
 def get_hairshop_recommendations(
@@ -314,11 +319,114 @@ def get_hairshop_recommendations(
         .filter(HairshopRecommendation.hair_rec_id == hair_rec_id) \
         .order_by(HairshopRecommendation.review_count.desc()) \
         .offset(skip).limit(limit).all()
+    
+    print(f"[DEBUG] hair_rec_id {hair_rec_id}에 대한 미용실 추천 조회. 개수: {len(shops)}")
+
     return [
         {
+            "hairshop_rec_id": s.hairshop_rec_id,
             "hairshop": s.hairshop,
             "review_count": s.review_count,
-            "mean_score": s.mean_score
+            "mean_score": s.mean_score,
+            "is_saved": bool(s.is_saved),
+            "associated_hair_name": s.associated_hair_name
         }
         for s in shops
+    ]
+
+@router.put("/user/hair-recommendations/{hair_rec_id}/toggle-save")
+def toggle_save_hair_recommendation(
+    hair_rec_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user_id = int(current_user["user_id"])
+    hair_rec = db.query(HairRecommendation).filter(
+        HairRecommendation.hair_rec_id == hair_rec_id,
+        HairRecommendation.user_id == user_id
+    ).first()
+    
+    if not hair_rec:
+        raise HTTPException(status_code=404, detail="Hair recommendation not found")
+        
+    hair_rec.is_saved = 1 if hair_rec.is_saved == 0 else 0
+    db.commit()
+    db.refresh(hair_rec)
+    
+    return {"hair_rec_id": hair_rec.hair_rec_id, "is_saved": bool(hair_rec.is_saved)}
+
+@router.put("/user/hairshop-recommendations/{hairshop_rec_id}/toggle-save")
+def toggle_save_hairshop_recommendation(
+    hairshop_rec_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user_id = int(current_user["user_id"])
+    hairshop_rec = db.query(HairshopRecommendation).filter(
+        HairshopRecommendation.hairshop_rec_id == hairshop_rec_id,
+        HairshopRecommendation.user_id == user_id
+    ).first()
+    
+    if not hairshop_rec:
+        raise HTTPException(status_code=404, detail="Hairshop recommendation not found")
+        
+    hairshop_rec.is_saved = 1 if hairshop_rec.is_saved == 0 else 0
+    db.commit()
+    db.refresh(hairshop_rec)
+    
+    return {"hairshop_rec_id": hairshop_rec.hairshop_rec_id, "is_saved": bool(hairshop_rec.is_saved)}
+
+@router.get("/user/saved-hairstyles", response_model=List[HairRecommendationResponse])
+def get_saved_hairstyles(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user_id = int(current_user["user_id"])
+    saved_hairs = db.query(HairRecommendation).filter(
+        HairRecommendation.user_id == user_id,
+        HairRecommendation.is_saved == 1
+    ).all()
+    
+    return [
+        {
+            "hair_rec_id": h.hair_rec_id,
+            "hair_name": h.hair_name,
+            "simulation_image_url": h.simulation_image_url,
+            "description": h.description,
+            "is_saved": bool(h.is_saved)
+        }
+        for h in saved_hairs
+    ]
+
+@router.get("/user/saved-hairshops", response_model=List[HairshopRecommendationResponse])
+def get_saved_hairshops(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user_id = int(current_user["user_id"])
+    
+    # HairshopRecommendation과 HairRecommendation을 조인하여 헤어스타일 이름을 가져옵니다.
+    saved_shops = db.query(
+        HairshopRecommendation,
+        HairRecommendation.hair_name
+    ).join(
+        HairRecommendation,
+        HairshopRecommendation.hair_rec_id == HairRecommendation.hair_rec_id
+    ).filter(
+        HairshopRecommendation.user_id == user_id,
+        HairshopRecommendation.is_saved == 1
+    ).all()
+    
+    print(f"[DEBUG] 조회된 저장된 미용실 개수: {len(saved_shops)}")
+    
+    return [
+        {
+            "hairshop_rec_id": shop.HairshopRecommendation.hairshop_rec_id,
+            "hairshop": shop.HairshopRecommendation.hairshop,
+            "review_count": shop.HairshopRecommendation.review_count,
+            "mean_score": shop.HairshopRecommendation.mean_score,
+            "is_saved": bool(shop.HairshopRecommendation.is_saved),
+            "associated_hair_name": shop.hair_name
+        }
+        for shop in saved_shops
     ]

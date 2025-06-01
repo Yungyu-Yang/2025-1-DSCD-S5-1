@@ -1,31 +1,62 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet,ScrollView,Linking } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Image, StyleSheet,ScrollView,Linking, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, usePathname} from 'expo-router';
+import api from '../config/api';
+import { authService } from '../services/authService';
+import { Feather } from '@expo/vector-icons';
 
 export default function MypageHairshop() {
   const router = useRouter();
   const pathname = usePathname();
+  const [userProfile, setUserProfile] = useState(null);
+  const [savedHairshops, setSavedHairshops] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const shops = [{
-    id : 1,
-    name :'하츠도산',
-    desc : '세련된 분위기의 최신 트렌드를 반영한 서비스',
-    style : '리프컷 , 드롭컷 ,가일컷',
-    location:'서울시 강남구 압구정동 189로',
-    tel : '02 - 1010 -1010',
-    link : 'https://map.naver.com/p/entry/place/1710391167?lng=127.0350643&lat=37.5234158&placePath=%2Fhome&entry=plt&searchType=place&c=15.00,0,0,0,dh'
-  },
-  {
-    id : 2,
-    name :'하츠도산',
-    desc : '세련된 분위기의 최신 트렌드를 반영한 서비스',
-    style : '리프컷 , 드롭컷 ,가일컷',
-    location:'서울시 강남구 압구정동 189로',
-    tel : '02 - 1010 -1010',
-    link : 'https://map.naver.com/p/entry/place/1710391167?lng=127.0350643&lat=37.5234158&placePath=%2Fhome&entry=plt&searchType=place&c=15.00,0,0,0,dh'
-  
+  useEffect(() => {
+    loadUserProfile();
+    loadSavedHairshops();
+  }, []);
 
-  }]
+  const loadUserProfile = async () => {
+    try {
+      setIsLoading(true);
+      const profile = await authService.getProfile();
+      setUserProfile(profile);
+    } catch (error) {
+      Alert.alert('오류', '프로필 정보를 불러오는데 실패했습니다.');
+      if (error.response?.status === 401) {
+        router.push('/signin');
+      }
+    } finally {
+      // setIsLoading(false);
+    }
+  };
+
+  const loadSavedHairshops = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get('/user/saved-hairshops');
+      setSavedHairshops(response.data);
+    } catch (error) {
+      console.error('[ERROR] 저장된 미용실 불러오기 실패:', error);
+      Alert.alert('오류', '저장된 미용실 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleSaveHairshop = async (hairshopRecId) => {
+    try {
+      const response = await api.put(`/user/hairshop-recommendations/${hairshopRecId}/toggle-save`);
+      console.log('[INFO] 미용실 저장 상태 토글 성공:', response.data);
+      if (!response.data.is_saved) {
+        setSavedHairshops(prevList => prevList.filter(shop => shop.hairshop_rec_id !== hairshopRecId));
+      }
+    } catch (error) {
+      console.error('[ERROR] 미용실 저장 상태 토글 실패:', error);
+      Alert.alert('오류', '미용실 저장 상태 변경에 실패했습니다.');
+    }
+  };
 
   return (
     <View style={{ flex: 1 ,backgroundColor: 'white'}}>
@@ -47,9 +78,14 @@ export default function MypageHairshop() {
     <View style={styles.profileCard}>
       <Image source={require('../../assets/profile.png')} style={styles.profileIcon} />
       <View>
-        <Text style={styles.profileText}>사용자</Text>
-        <Text style={styles.profileText}>남</Text>
-        <Text style={styles.profileText}>서울시 강남구</Text>
+        {userProfile ? (
+          <>
+            <Text style={styles.profileText}>{userProfile.nickname}</Text>
+            <Text style={styles.profileText}>{userProfile.email}</Text>
+          </>
+        ) : (
+          <Text style={styles.profileText}>로딩 중...</Text>
+        )}
       </View>
     </View>
     
@@ -69,19 +105,30 @@ export default function MypageHairshop() {
 
     <View style={styles.divider} />
     <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
-    {/* 샵 카드 리스트 */}
-    {shops.map((shop) => (
-      <View key={shop.id} style={styles.shopCard}>
-        <Text style={styles.shopName}>{shop.name}</Text>
-        <Text style={styles.shopDesc}>{shop.desc}</Text>
-        <Text style={styles.shopDetail}>스타일: {shop.style}</Text>
-        <Text style={styles.shopDetail}>위치: {shop.location}</Text>
-        <Text style={styles.shopDetail}>tel:{shop.tel}</Text>
-        <TouchableOpacity onPress ={()=> Linking.openURL('https://map.naver.com/p/search/%ED%95%98%EC%B8%A0%EB%8F%84%EC%82%B0/place/1710391167?c=15.00,0,0,0,dh&placePath=%3Fentry%253Dbmp')}>
-                              <Text style={styles.link}>link</Text>
-                            </TouchableOpacity> 
-      </View>
-    ))}
+    {isLoading ? (
+      <ActivityIndicator size="large" color="#FFBCC2" style={{ marginTop: 40 }} />
+    ) : savedHairshops.length === 0 ? (
+      <Text style={{ textAlign: 'center', marginTop: 20, color: '#888' }}>저장된 미용실이 없습니다.</Text>
+    ) : (
+      savedHairshops.map((shop) => (
+        <View key={shop.hairshop_rec_id} style={styles.shopCard}>
+           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+             <Text style={styles.shopName}>{shop.hairshop}</Text>
+             <TouchableOpacity onPress={() => toggleSaveHairshop(shop.hairshop_rec_id)}>
+               <Feather
+                 name={'bookmark'}
+                 size={20}
+                 color={'#FFBCC2'}
+               />
+             </TouchableOpacity>
+           </View>
+          <Text style={styles.shopDetail}>리뷰수: {shop.review_count} | 평점: {shop.mean_score?.toFixed(2)}</Text>
+           {shop.associated_hair_name && (
+             <Text style={styles.shopDetail}>추천 헤어스타일: {shop.associated_hair_name}</Text>
+           )}
+        </View>
+      ))
+    )}
   </ScrollView>
 </View>   
          
@@ -159,24 +206,13 @@ const styles = StyleSheet.create({
   shopName: {
     fontWeight: 'bold',
     fontSize: 16,
-    marginBottom: 5,
-    textAlign: 'center',
-  },
-  shopDesc: {
-    fontSize: 14,
-    marginBottom: 5,
     textAlign: 'center',
   },
   shopDetail: {
     fontSize: 12,
     color: '#3F414E',
     textAlign: 'center',
-  },
-  link: {
-    textAlign: 'center',
-    color: '#FFBCC2',
-    marginTop: 5,
-    fontWeight: 'bold',
+    marginTop: 2,
   },
   underline:{
     marginTop:3,

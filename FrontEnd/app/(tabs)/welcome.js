@@ -26,7 +26,7 @@ export default function WelcomeScreen() {
 
       {/* 아래쪽 영역 */}
       <View style={styles.bottomSection}>
-        <TouchableOpacity style={styles.button} onPress={() => router.push('/signup')}>
+        <TouchableOpacity style={styles.button} onPress={() => router.push('/home-discover')}>
           <Text style={styles.buttonText}>GET STARTED</Text>
         </TouchableOpacity>
       </View>
