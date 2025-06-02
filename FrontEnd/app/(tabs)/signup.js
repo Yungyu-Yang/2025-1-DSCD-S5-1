@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import Checkbox from 'expo-checkbox';
 import { Ionicons } from '@expo/vector-icons';
@@ -79,82 +79,93 @@ export default function SignUpScreen() {
   const [isPasswordVisible, setPasswordVisible] = useState(false);
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backButtonText}>←</Text>
-      </TouchableOpacity>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.container}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/')}>
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
 
-      <Text style={styles.title}>Create your account</Text>
+          <Text style={styles.title}>Create your account</Text>
 
-      <TouchableOpacity style={styles.fbButton} onPress={() => console.log('Facebook')}>
-        <View style={styles.fbButtonContent}>
-          <Image source={require('../../assets/fblogo.png')} style={styles.fbicon} />
-          <Text style={styles.fbButtonText}>CONTINUE WITH FACEBOOK</Text>
-        </View>
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.socialButton} onPress={() => console.log('Facebook')}>
+            <View style={styles.socialButtonContent}>
+              <Image source={require('../../assets/fblogo.png')} style={styles.socialIcon} />
+              <Text style={styles.socialButtonText}>CONTINUE WITH FACEBOOK</Text>
+            </View>
+          </TouchableOpacity>
 
-      <TouchableOpacity style={styles.GgButton} onPress={() => console.log('Google')}>
-        <View style={styles.GgButtonContent}>
-          <Image source={require('../../assets/Gglogo.png')} style={styles.Ggicon} />
-          <Text style={styles.GgButtonText}>CONTINUE WITH GOOGLE</Text>
-        </View>
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.socialButtonOutline} onPress={() => console.log('Google')}>
+            <View style={styles.socialButtonContent}>
+              <Image source={require('../../assets/Gglogo.png')} style={styles.socialIcon} />
+              <Text style={styles.socialButtonTextOutline}>CONTINUE WITH GOOGLE</Text>
+            </View>
+          </TouchableOpacity>
 
-      <Text style={{ color: '#A1A4B2', fontWeight: '600',fontSize: 13 }}>
-        OR LOGIN WITH EMAIL
-      </Text>
+          <Text style={styles.dividerText}>
+            OR LOGIN WITH EMAIL
+          </Text>
 
-      <View style = {[styles.inputWithIcon,{marginTop:20}]}>
-        <TextInput
-          placeholder="Name"
-          style={styles.inputField}
-          value={name}
-          onChangeText={setName}
-        />
-        {isValidName(name) && (
-            <Ionicons name="checkmark-circle" size={15} color="green" />
-          )}
-        </View>
-        <View style={[styles.inputWithIcon,{marginTop:20}]}>
-          <TextInput
-            placeholder="Email"
-            style={styles.inputField}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
-          {isValidEmail(email) && (
-            <Ionicons name="checkmark-circle" size={15} color="green" />
-          )}
-        </View>
-        <View style = {[styles.inputWithIcon,{marginTop:20}]}>
-          <TextInput
-            placeholder="Password"
-            style={styles.inputField}
-            secureTextEntry = {!isPasswordVisible}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity onPress={()=> setPasswordVisible(prev => !prev)} style={{padding:8}}>
-            <Ionicons
-              name = {isPasswordVisible ? 'eye' : 'eye-off'}
-              size={20}
-              color = '#A1A4B2'
-            />
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWithIcon}>
+              <TextInput
+                placeholder="Name"
+                style={styles.inputField}
+                value={name}
+                onChangeText={setName}
+              />
+              {isValidName(name) && (
+                <Ionicons name="checkmark-circle" size={15} color="green" />
+              )}
+            </View>
+            <View style={[styles.inputWithIcon, {marginTop: 15}]}>
+              <TextInput
+                placeholder="Email"
+                style={styles.inputField}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+              />
+              {isValidEmail(email) && (
+                <Ionicons name="checkmark-circle" size={15} color="green" />
+              )}
+            </View>
+            <View style={[styles.inputWithIcon, {marginTop: 15}]}>
+              <TextInput
+                placeholder="Password"
+                style={styles.inputField}
+                secureTextEntry={!isPasswordVisible}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity onPress={()=> setPasswordVisible(prev => !prev)} style={{padding:8}}>
+                <Ionicons
+                  name={isPasswordVisible ? 'eye' : 'eye-off'}
+                  size={20}
+                  color='#A1A4B2'
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.termsContainer}>
+            <TermsCheck isChecked={isChecked} setChecked={setChecked} />
+          </View>
+          
+          <TouchableOpacity onPress={handleSignUp} style={styles.submitButton}>
+            <Text style={styles.submitButtonText}>GET STARTED</Text>
           </TouchableOpacity>
         </View>
-      <View style ={{marginTop:20}}>
-        <TermsCheck isChecked={isChecked} setChecked={setChecked} />
-      </View>
-      
-      
-      <TouchableOpacity onPress={handleSignUp} style={styles.submitButton}>
-        <View style={styles.submitButtonContent}>
-          <Text style={styles.submitButtonText}>GET STARTED</Text>
-        </View>
-      </TouchableOpacity>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -164,21 +175,20 @@ const styles = StyleSheet.create({
     paddingTop: 100,
     alignItems: 'center',
     backgroundColor: '#fff',
+    paddingBottom: 20,
   },
-  
   title: {
     fontWeight: 'bold',
     fontSize: 25,
     textAlign: 'center',
     marginBottom: 30,
     color: '#3F414E',
-    bottom : 20
   },
   backButton: {
     position: 'absolute',
     top: 20,
     left: 20,
-    width: 50,  
+    width: 50,
     height: 50,
     backgroundColor: 'white',
     paddingHorizontal: 10,
@@ -194,103 +204,89 @@ const styles = StyleSheet.create({
     color: 'black',
     fontWeight: 'bold',
   },
-  inputbase: {
-    width: 360,
-    height: 50,
-    backgroundColor: '#F2F3F7',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 20,
-    fontSize: 16,
-    marginTop: 20,
-  },
-  fbButton: {
-    width:'90%',
+  socialButton: {
+    width: '90%',
     backgroundColor: '#FFBCC2',
     paddingVertical: 17,
-    paddingHorizontal: 75,
     borderRadius: 10,
-    marginBottom: 20,
-    bottom : 20
+    marginBottom: 15,
   },
-  fbButtonText: {
-    color: '#F6F1FB',
-    fontWeight: '500',
-  },
-  fbButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  fbicon: {
-    width: 10,
-    height: 20,
-    marginRight: 10,
-  },
-  GgButton: {
-    width:'90%',
+  socialButtonOutline: {
+    width: '90%',
     paddingVertical: 17,
-    paddingHorizontal: 73,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#F2F2F2',
-    bottom : 20,
+    marginBottom: 20,
   },
-  GgButtonText: {
+  socialButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  socialIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+  },
+  socialButtonText: {
+    color: '#F6F1FB',
+    fontWeight: '500',
+    fontSize: 14,
+  },
+  socialButtonTextOutline: {
     color: '#3F414E',
     fontWeight: '500',
+    fontSize: 14,
   },
-  GgButtonContent: {
+  dividerText: {
+    color: '#A1A4B2',
+    fontWeight: '600',
+    fontSize: 13,
+    marginBottom: 20,
+  },
+  inputContainer: {
+    width: '90%',
+    marginBottom: 20,
+  },
+  inputWithIcon: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#F2F3F7',
+    paddingHorizontal: 12,
+    height: 50,
+    borderRadius: 10,
   },
-  Ggicon: {
-    width: 20,
-    height: 22,
-    marginRight: 20,
+  inputField: {
+    flex: 1,
+    fontSize: 16,
+  },
+  termsContainer: {
+    width: '90%',
+    marginBottom: 20,
   },
   checkboxRow: {
-    width: 410,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 28,
     justifyContent: 'space-between',
   },
   policyText: {
     color: '#A1A4B2',
-    marginLeft: 0,
-    textAlign: 'left',
-    alignItems: 'flex-start',
+    fontSize: 14,
   },
   linkText: {
     color: '#FFBCC2',
   },
   submitButton: {
-    width:'90%',
+    width: '90%',
     backgroundColor: '#FFBCC2',
     paddingVertical: 17,
-    paddingHorizontal: 130,
     borderRadius: 10,
-    marginTop: 30,
+    alignItems: 'center',
   },
   submitButtonText: {
-    color: '#F2F2F2',
-  },
-  submitButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  inputWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F2F2F2',
-    paddingHorizontal: 12,
-    width: 360,
-    height: 50,
-    borderRadius: 10,
-  },
-  inputField: {
-    width:'90%',
-    flex: 1,
+    color: '#F6F1FB',
     fontSize: 16,
+    fontWeight: '500',
   },
 });

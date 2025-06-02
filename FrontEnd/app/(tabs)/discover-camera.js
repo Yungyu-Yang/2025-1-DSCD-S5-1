@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -217,7 +217,7 @@ export default function DiscoverCamera({ route }) {
         </TouchableOpacity>
       </View>
 
-      <View style={{ flex: 1 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
         <View style={styles.buttonContainer}>
           {['DISCOVER', 'SIMULATION', 'HAIRSHOP'].map((tab) => (
             <TouchableOpacity
@@ -254,16 +254,16 @@ export default function DiscoverCamera({ route }) {
           <TouchableOpacity style={styles.shutterOuter} onPress={takePicture}>
           </TouchableOpacity>
         </View>
+        <Text style={styles.text}>이마와 눈썹이 잘 보이도록 촬영해주세요.{'\n'}
+          그림자가 지지 않도록 사진을 찍어주세요.
+        </Text>
         <TouchableOpacity
-          style={[styles.selectedButton, { marginTop: 20 }]}
+          style={[styles.selectedButton]}
           onPress={handleAnalyze}
         >
           <Text style={styles.selectedButtonText}>분석하기</Text>
         </TouchableOpacity>
-        <Text style={styles.text}>이마가 나오도록 사진을 찍어주세요.{'\n'}
-          그림자가 지지 않도록 사진을 찍어주세요.
-        </Text>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -327,7 +327,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 400,
     textAlign: 'center',
-    top: 20
+    color: '#666666',
+    lineHeight: 22,
+    marginTop: 10,
+    marginBottom: 20,
   },
   cameraContainer: {
     width: 369,
@@ -343,10 +346,10 @@ const styles = StyleSheet.create({
   },
   controls: {
     flexDirection: 'row',
-    justifyContent: 'space-arround',
-    alignSelf: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 20,
+    marginBottom: 30,
   },
   previewBox: {
     width: 40,
@@ -371,7 +374,6 @@ const styles = StyleSheet.create({
     borderColor: '#FCE3E6',
     borderWidth: 3,
     marginHorizontal: 100,
-    left: -20
   },
   selectedButton: {
     width: '90%',
@@ -381,7 +383,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     alignSelf: 'center',
-    bottom: 40
+    marginBottom: 20,
   },
   selectedButtonText: {
     fontSize: 14,

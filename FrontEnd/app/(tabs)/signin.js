@@ -1,6 +1,6 @@
 // app/signup.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { authService } from '../services/authService';
@@ -54,77 +54,85 @@ export default function SigninScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backButtonText}>←</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.title}>Welcome Back!</Text>
-
-      <TouchableOpacity style={styles.fbButton} onPress={() => console.log('Facebook')}>
-        <View style={styles.fbButtonContent}>
-          <Image source={require('../../assets/fblogo.png')} style={styles.fbicon} />
-          <Text style={styles.fbButtonText}>CONTINUE WITH FACEBOOK</Text>
-        </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.GgButton} onPress={() => console.log('Google')}>
-        <View style={styles.GgButtonContent}>
-          <Image source={require('../../assets/Gglogo.png')} style={styles.Ggicon} />
-          <Text style={styles.GgButtonText}>CONTINUE WITH GOOGLE</Text>
-        </View>
-      </TouchableOpacity>
-
-      <Text style={{ color: '#A1A4B2', fontWeight: '600', marginBottom: 20, fontSize: 13 }}>
-        OR LOGIN WITH EMAIL
-      </Text>
-
-      <View>
-        <View style={styles.inputWithIcon}>
-          <TextInput
-            placeholder="Email"
-            style={styles.inputField}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
-          {isValidEmail(email) && <Ionicons name="checkmark-circle" size={15} color="green" />}
-        </View>
-      <View style = {[styles.inputWithIcon,{marginTop:20}]}>
-        <TextInput
-          placeholder="Password"
-          style={styles.inputField}
-          secureTextEntry = {!isPasswordVisible}
-          value={password}
-          onChangeText={setPassword}
-        />
-         <TouchableOpacity onPress={()=> setPasswordVisible(prev => !prev)} style={{padding:8}}>
-            <Ionicons
-              name = {isPasswordVisible ? 'eye' : 'eye-off'}
-              size={20}
-              color = '#A1A4B2'
-              style = {{marginRight:'auto'}}
-              />
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.container}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/')}>
+            <Text style={styles.backButtonText}>←</Text>
           </TouchableOpacity>
-      </View>
-    </View>
 
-      <TouchableOpacity onPress={handleSignin} style={styles.submitButton}>
-        <View style={styles.submitButtonContent}>
-          <Text style={styles.submitButtonText}>LOG IN</Text>
+          <Text style={styles.title}>Welcome Back!</Text>
+
+          <TouchableOpacity style={styles.socialButton} onPress={() => console.log('Facebook')}>
+            <View style={styles.socialButtonContent}>
+              <Image source={require('../../assets/fblogo.png')} style={styles.socialIcon} />
+              <Text style={styles.socialButtonText}>CONTINUE WITH FACEBOOK</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.socialButtonOutline} onPress={() => console.log('Google')}>
+            <View style={styles.socialButtonContent}>
+              <Image source={require('../../assets/Gglogo.png')} style={styles.socialIcon} />
+              <Text style={styles.socialButtonTextOutline}>CONTINUE WITH GOOGLE</Text>
+            </View>
+          </TouchableOpacity>
+
+          <Text style={styles.dividerText}>
+            OR LOGIN WITH EMAIL
+          </Text>
+
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWithIcon}>
+              <TextInput
+                placeholder="Email"
+                style={styles.inputField}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+              />
+              {isValidEmail(email) && <Ionicons name="checkmark-circle" size={15} color="green" />}
+            </View>
+            <View style={[styles.inputWithIcon, {marginTop: 15}]}>
+              <TextInput
+                placeholder="Password"
+                style={styles.inputField}
+                secureTextEntry={!isPasswordVisible}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity onPress={()=> setPasswordVisible(prev => !prev)} style={{padding:8}}>
+                <Ionicons
+                  name={isPasswordVisible ? 'eye' : 'eye-off'}
+                  size={20}
+                  color='#A1A4B2'
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <TouchableOpacity onPress={handleSignin} style={styles.submitButton}>
+            <Text style={styles.submitButtonText}>LOG IN</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.forgotPassword}>Forgot Password?</Text>
+
+          <View style={styles.signupContainer}>
+            <Text style={styles.signupText}>DON'T HAVE AN ACCOUNT?</Text>
+            <TouchableOpacity onPress={() => router.push('/signup')}>
+              <Text style={styles.signupLink}>SIGN UP</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </TouchableOpacity>
-
-      <Text style={{ marginTop: 15, fontWeight: '500', color: '#3F414E' }}>Forgot Password?</Text>
-
-      <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: -20 }}>
-        <Text style={{ color: '#A1A4B2', fontWeight: '500' }}>DON'T HAVE AN ACCOUNT? </Text>
-        <TouchableOpacity onPress={() => router.push('/signup')}>
-          <Text style={{ color: '#FFBCC2', fontWeight: '500' }}>SIGN UP</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -134,6 +142,7 @@ const styles = StyleSheet.create({
     paddingTop: 100,
     alignItems: 'center',
     backgroundColor: '#fff',
+    paddingBottom: 20,
   },
   title: {
     fontWeight: 'bold',
@@ -141,7 +150,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 30,
     color: '#3F414E',
-    bottom : 20
   },
   backButton: {
     position: 'absolute',
@@ -163,79 +171,96 @@ const styles = StyleSheet.create({
     color: 'black',
     fontWeight: 'bold',
   },
-  fbButton: {
-    width:'90%',
+  socialButton: {
+    width: '90%',
     backgroundColor: '#FFBCC2',
     paddingVertical: 17,
-    paddingHorizontal: 75,
     borderRadius: 10,
-    marginBottom: 20,
-    bottom : 20
+    marginBottom: 15,
   },
-  fbButtonText: {
-    color: '#F6F1FB',
-    fontWeight: '500',
-  },
-  fbButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  fbicon: {
-    width: 10,
-    height: 20,
-    marginRight: 10,
-  },
-  GgButton: {
-    width:'90%',
+  socialButtonOutline: {
+    width: '90%',
     paddingVertical: 17,
-    paddingHorizontal: 73,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#F2F2F2',
-    bottom:20,
+    marginBottom: 20,
   },
-  GgButtonText: {
+  socialButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  socialIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+  },
+  socialButtonText: {
+    color: '#F6F1FB',
+    fontWeight: '500',
+    fontSize: 14,
+  },
+  socialButtonTextOutline: {
     color: '#3F414E',
     fontWeight: '500',
+    fontSize: 14,
   },
-  GgButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  dividerText: {
+    color: '#A1A4B2',
+    fontWeight: '600',
+    fontSize: 13,
+    marginBottom: 20,
   },
-  Ggicon: {
-    width: 20,
-    height: 22,
-    marginRight: 20,
-  },
-  linkText: {
-    color: '#3F414E',
-  },
-  submitButton: {
-    width:'90%',
-    backgroundColor: '#FFBCC2',
-    paddingVertical: 17,
-    paddingHorizontal: 160,
-    borderRadius: 10,
-    marginTop: 5,
-  },
-  submitButtonText: {
-    color: '#F6F1FB',
-  },
-  submitButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  inputContainer: {
+    width: '90%',
+    marginBottom: 20,
   },
   inputWithIcon: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F2F3F7',
     paddingHorizontal: 12,
-    width: 360,
     height: 50,
     borderRadius: 10,
   },
   inputField: {
     flex: 1,
     fontSize: 16,
+  },
+  submitButton: {
+    width: '90%',
+    backgroundColor: '#FFBCC2',
+    paddingVertical: 17,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  submitButtonText: {
+    color: '#F6F1FB',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  forgotPassword: {
+    marginTop: 15,
+    fontWeight: '500',
+    color: '#3F414E',
+    fontSize: 14,
+  },
+  signupContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  signupText: {
+    color: '#A1A4B2',
+    fontWeight: '500',
+    fontSize: 14,
+  },
+  signupLink: {
+    color: '#FFBCC2',
+    fontWeight: '500',
+    fontSize: 14,
+    marginLeft: 5,
   },
 });
