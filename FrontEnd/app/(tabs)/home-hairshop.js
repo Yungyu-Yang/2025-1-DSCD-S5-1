@@ -1,165 +1,160 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-
-
 
 export default function HomeHairshop() {
   const router = useRouter();
-  const [selectedTab , setselectedTab] = useState('HAIRSHOP');
+  const [selectedTab, setSelectedTab] = useState('HAIRSHOP');
 
   return (
-    <View style={{ flex: 1 ,backgroundColor: 'white'}}>
-        <View style={styles.header}>
-        <TouchableOpacity onPress={()=>router.push('/welcome')}>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.push('/welcome')}>
           <Image source={require('../../assets/logo2.png')} style={styles.logoimage} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={()=> router.push('/mypage-hairstyle')}>
-          <Image source={require('../../assets/mypage.png')} style = {styles.mypageimage}/>
+        <TouchableOpacity onPress={() => router.push('/mypage-hairstyle')}>
+          <Image source={require('../../assets/mypage.png')} style={styles.mypageimage} />
         </TouchableOpacity>
-        </View>
+      </View>
 
-      <View style={{flex: 1}}>
-        <View style={styles.buttonContainer}>
-          
-          {['DISCOVER','SIMULATION','HAIRSHOP'].map((tab)=>(
-            <TouchableOpacity key={tab} 
+      <View style={styles.tabContainer}>
+        {['DISCOVER', 'HAIRSHOP'].map((tab) => (
+          <TouchableOpacity
+            key={tab}
             onPress={() => {
-              setselectedTab(tab);
               if (tab === 'DISCOVER') {
                 router.push('/home-discover');
-              } else if (tab === 'SIMULATION') {
-                router.push('/home-simulation');
+                setTimeout(() => setSelectedTab('DISCOVER'), 0);
               } else {
                 router.push('/home-hairshop');
+                setTimeout(() => setSelectedTab('HAIRSHOP'), 0);
               }
             }}
-              style={styles.tabItem}>
-            <Text style={[styles.tabText,selectedTab === tab && styles.activeTabText]}>
+            style={[styles.tabItem, selectedTab === tab && styles.activeTabItem]}
+          >
+            <Text style={[styles.tabText, selectedTab === tab && styles.activeTabText]}>
               {tab}
             </Text>
-            {selectedTab === tab && <View style={styles.underline}/>}
-            </TouchableOpacity>))}
-          
-        </View>
-        <View style ={styles.horizontalLine}/>
-        <Text style = {styles.text}>당신 근처의 미용실을 찾아보세요!</Text>
-        <View style={styles.imageContainer}>
-          <Image source={require('../../assets/example_hairshop.png')}style ={styles.exampleImage}/>
-          </View>
-        </View>
-        <TouchableOpacity onPress={()=>router.push('./hairshop-recomendation')} style={styles.startButton}>
-                <View style={styles.startButtonContent}>
-                  <Text style={styles.startButtonText}>GET STARTED</Text>
-                </View>
-              </TouchableOpacity>
+          </TouchableOpacity>
+        ))}
       </View>
-    
+      <View style={styles.horizontalLine} />
+
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.text}>당신 근처의 미용실을 찾아보세요!</Text>
+        <View style={styles.imageContainer}>
+          <Image source={require('../../assets/example_hairshop.png')} style={styles.exampleImage} />
+        </View>
+        <TouchableOpacity onPress={() => router.push('./hairshop-recomendation')} style={styles.startButton}>
+          <View style={styles.startButtonContent}>
+            <Text style={styles.startButtonText}>GET STARTED</Text>
+          </View>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header:{
-    height:55,
-    flexDirection:'row',
-    justifyContent : 'space-between',
-    paddingHorizontal:15,
-    alignItems : 'center',
-    backgroundColor : '#FFBCC2'
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  header: {
+    height: 55,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    alignItems: 'center',
+    backgroundColor: '#FFBCC2'
   },
   logoimage: {
     width: 160,
     height: 45,
-    resizeMode : 'contain',
+    resizeMode: 'contain',
   },
-  mypageimage:{
-    width :34,
-    height : 33,
-    resizeMode : 'contain',
-  },
-
-  horizontalLine: {
-    height: 1,               
-    backgroundColor: '#B7B7B7', 
-    width: '100%',          
-    marginTop:0,
-    bottom:5
-  },
-  buttonContainer :{
-    flexDirection:'row',
-    justifyContent : 'space-around',
-    marginHorizontal : 20,
-    marginTop : 15,
+  mypageimage: {
+    width: 34,
+    height: 33,
+    resizeMode: 'contain',
   },
   tabContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    backgroundColor: 'white',
+    paddingTop: 15,
+    paddingBottom: 5,
   },
   tabItem: {
+    flex: 1,
     alignItems: 'center',
-    paddingBottom: 5,
-    marginHorizontal :15
+    paddingVertical: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
-  
+  activeTabItem: {
+    borderBottomColor: '#A3A3A3',
+  },
   tabText: {
     fontSize: 14,
     color: '#3F414E',
     fontWeight: '400',
   },
-  
   activeTabText: {
     fontWeight: 'bold',
   },
-  
-  underline: {
-    marginTop: 15,
-    height: 2,
+  horizontalLine: {
+    height: 1,
+    backgroundColor: '#B7B7B7',
     width: '100%',
-    backgroundColor: '#A3A3A3',
   },
-  text:{
-    fontSize : 16,
-    fontWeight : 400,
-    textAlign : 'center',
-    marginTop:40,
-    marginbottom :20,
+  scrollView: {
+    flex: 1,
   },
-  imageContainer :{
-    width:'90%',
-    height:'63%',
-    top : 30,
-    backgroundColor:'#FFE0E3',
-    justifyContent : 'center',
-    alignItems : 'center',
-    alignSelf :'center',
-    marginVertical : 20,
-    borderRadius:20
+  scrollContent: {
+    paddingBottom: 30,
   },
-  exampleImage :{
-    top:24.5,
-    resizeMode : 'cover',
-    width : 300,
-    height : 300,
+  text: {
+    fontSize: 16,
+    fontWeight: '400',
+    textAlign: 'center',
+    marginTop: 30,
+    marginBottom: 20,
+  },
+  imageContainer: {
+    width: '90%',
+    height: 350,
+    backgroundColor: '#FFE0E3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginVertical: 20,
+    borderRadius: 20,
+  },
+  exampleImage: {
+    resizeMode: 'cover',
+    width: 300,
+    height: 300,
   },
   startButton: {
-    width:'90%',
-    backgroundColor:'#FFBCC2',
+    width: '90%',
+    backgroundColor: '#FFBCC2',
     paddingVertical: 17,
-    paddingHorizontal: 100,
     borderRadius: 10,
-    marginTop: 30,
-    marginHorizontal:30 ,
-    alignItems:'center',
-    bottom:20
+    marginTop: 20,
+    marginHorizontal: 20,
+    alignItems: 'center',
   },
-  startButtonText:{
-    fontSize : 14,
-    fontWeight:400,
-    color :'#F6F1FB',
-    
+  startButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#F6F1FB',
   },
   startButtonContent: {
     alignItems: 'center',
-    flexDirection: 'row'
+    flexDirection: 'row',
   },
 });
