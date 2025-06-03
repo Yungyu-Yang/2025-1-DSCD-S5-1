@@ -96,10 +96,10 @@ def recommend(user_input: UserRequest):
         # Main API로 전송
         try:
             print("[7단계] Main API로 결과 전송 시작")
-            # [개발용]
-            response = requests.post("http://main-api:8000/save-recommendation/", json=final_result)
-            # # [운영용]
-            # response = requests.post("http://43.202.9.255:8000/save-recommendation/", json=final_result)
+            # # [개발용]
+            # response = requests.post("http://main-api:8000/save-recommendation/", json=final_result)
+            # [운영용]
+            response = requests.post("http://43.201.129.41:8000/save-recommendation/", json=final_result)
             response.raise_for_status()
             print("[INFO] Main API 서버에 추천 결과 저장 성공")
         except Exception as e:
