@@ -72,6 +72,9 @@ export default function MyPageHairstyle() {
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.push('/home-discover')}>
+          <Feather name="chevron-left" size={24} color="white" />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/welcome')}>
           <Image source={require('../../assets/logo2.png')} style={styles.logoimage} />
         </TouchableOpacity>
