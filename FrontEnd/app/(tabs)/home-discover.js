@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 
 export default function HomeDiscover() {
   const router = useRouter();
-  const [selectedTab, setSelectedTab] = useState('DISCOVER');
+  const [selectedTab] = useState('DISCOVER');
 
   return (
     <View style={styles.container}>
@@ -18,25 +18,9 @@ export default function HomeDiscover() {
       </View>
 
       <View style={styles.tabContainer}>
-        {['DISCOVER', 'HAIRSHOP'].map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            onPress={() => {
-              if (tab === 'DISCOVER') {
-                router.push('/home-discover');
-                setTimeout(() => setSelectedTab('DISCOVER'), 0);
-              } else {
-                router.push('/home-hairshop');
-                setTimeout(() => setSelectedTab('HAIRSHOP'), 0);
-              }
-            }}
-            style={[styles.tabItem, selectedTab === tab && styles.activeTabItem]}
-          >
-            <Text style={[styles.tabText, selectedTab === tab && styles.activeTabText]}>
-              {tab}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        <View style={[styles.tabItem, styles.activeTabItem]}>
+          <Text style={[styles.tabText, styles.activeTabText]}>DISCOVER</Text>
+        </View>
       </View>
       <View style={styles.horizontalLine} />
 

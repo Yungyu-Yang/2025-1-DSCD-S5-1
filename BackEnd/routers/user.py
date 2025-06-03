@@ -49,6 +49,11 @@ class UserResultResponse(BaseModel):
     rec_color: str
     summary: str
 
+class UserInfoResponse(BaseModel):
+    user_id: int
+    name: str
+    email: str
+
 # face_extract 호출 함수 정의
 def trigger_face_extract(user_id, request_id):
     try:
@@ -430,3 +435,11 @@ def get_saved_hairshops(
         }
         for shop in saved_shops
     ]
+
+@router.get("/user/info", response_model=UserInfoResponse)
+def get_user_info(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+    return {
+        "user_id": current_user["user_id"],
+        "name": current_user["name"],
+        "email": current_user["email"]
+    }
