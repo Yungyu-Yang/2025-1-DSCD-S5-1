@@ -220,25 +220,17 @@ useEffect(() => {
       <View style={{flex: 1}}>
         <View style={styles.buttonContainer}>
           
-          {['DISCOVER','SIMULATION','HAIRSHOP'].map((tab)=>(
-            <TouchableOpacity 
-            key={tab} 
-            onPress={() =>  {
-              setSelectedTab(tab);
-              if (tab === 'DISCOVER') {
-                router.push('/home-discover');
-              } else if (tab === 'SIMULATION') {
-                router.push('/home-simulation');
-              } else {
-                router.push('/home-hairshop');
-              }
+          <TouchableOpacity 
+            onPress={() => {
+              setSelectedTab('DISCOVER');
+              router.push('/home-discover');
             }}
-              style={styles.tabItem}>
-            <Text style={[styles.tabText,selectedTab === tab && styles.activeTabText]}>
-              {tab}
+            style={styles.tabItem}>
+            <Text style={[styles.tabText,selectedTab === 'DISCOVER' && styles.activeTabText]}>
+              DISCOVER
             </Text>
-            {selectedTab === tab && <View style={styles.underline}/>}
-            </TouchableOpacity>))}
+            {selectedTab === 'DISCOVER' && <View style={styles.underline}/>}
+          </TouchableOpacity>
           
         </View>
         <View style ={styles.horizontalLine}/>
@@ -444,40 +436,41 @@ useEffect(() => {
 )}
 
       {step === 2 && (
-        <View style ={{flex: 1}}>
-                  <View style = {styles.questionBlock}> 
-                    <Text style={styles.question}>당신의 선호하는 분위기를 알려주세요.</Text>
-                    <Text style={styles.question2}>최대 3개까지 선택 가능합니다.</Text>
-        
-                    <View style = {styles.grid}>
-                      {chunkArray(mood, 3).map((row,rowIndex)=>(
-                          <View key = {rowIndex} style = {{flexDirection:'row', justifyContent : 'center',
-                            marginBottom : 16}}>
-                              {row.map((item)=>(
-                                  <TouchableOpacity
-                                    key= {item}
-                                    onPress={()=> toggleMood(item)}
-                                    style ={[
-                                      styles.moodButton,
-                                      selectedMood.includes(item) && styles.moodButtonSelected]}>
-                                    <Text style={[styles.moodButtonText, selectedMood.includes(item) && 
-                                      styles.moodButtonTextSelected
-                                    ]}>{item}</Text>
-                                  </TouchableOpacity>
-                              ))}
-                          </View>
-                      ))}
-                    </View>
-                   </View> 
-                   <View style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center'}}>
-                   <TouchableOpacity 
-                   onPress={handleSubmit}
-                   style={styles.selectedButton}>
-                     <Text style={styles.selectedButtonText}>SELECT IMAGE</Text>
-                     </TouchableOpacity>
-                   </View>
-           </View>        
-        )}
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={styles.questionBlock}> 
+            <Text style={styles.question}>당신의 선호하는 분위기를 알려주세요.</Text>
+            <Text style={styles.question2}>최대 3개까지 선택 가능합니다.</Text>
+    
+            <View style={styles.grid}>
+              {chunkArray(mood, 3).map((row, rowIndex) => (
+                <View key={rowIndex} style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 16 }}>
+                  {row.map((item) => (
+                    <TouchableOpacity
+                      key={item}
+                      onPress={() => toggleMood(item)}
+                      style={[
+                        styles.moodButton,
+                        selectedMood.includes(item) && styles.moodButtonSelected
+                      ]}>
+                      <Text style={[
+                        styles.moodButtonText,
+                        selectedMood.includes(item) && styles.moodButtonTextSelected
+                      ]}>{item}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ))}
+            </View>
+          </View>
+          <View style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 20 }}>
+            <TouchableOpacity 
+              onPress={handleSubmit}
+              style={styles.primaryButton}>
+              <Text style={styles.buttonText}>SELECT IMAGE</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      )}
 
        <View style = {{alignItems : 'center'}}>
             <View style ={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',width : '90%'}}>
@@ -724,6 +717,29 @@ const styles = StyleSheet.create({
   },
   moodButtonTextSelected: {
     fontWeight: 'bold',
+  },
+  primaryButton: {
+    width: '90%',
+    backgroundColor: '#FFBCC2',
+    paddingVertical: 17,
+    paddingHorizontal: 100,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 

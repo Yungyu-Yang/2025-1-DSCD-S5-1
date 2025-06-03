@@ -219,26 +219,17 @@ export default function DiscoverCamera({ route }) {
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
         <View style={styles.buttonContainer}>
-          {['DISCOVER', 'SIMULATION', 'HAIRSHOP'].map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => {
-                setselectedTab(tab);
-                if (tab === 'DISCOVER') {
-                  router.push('/home-discover');
-                } else if (tab === 'SIMULATION') {
-                  router.push('/home-simulation');
-                } else {
-                  router.push('/home-hairshop');
-                }
-              }}
-              style={styles.tabItem}>
-              <Text style={[styles.tabText, selectedTab === tab && styles.activeTabText]}>
-                {tab}
-              </Text>
-              {selectedTab === tab && <View style={styles.underline} />}
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity
+            onPress={() => {
+              setselectedTab('DISCOVER');
+              router.push('/home-discover');
+            }}
+            style={styles.tabItem}>
+            <Text style={[styles.tabText, selectedTab === 'DISCOVER' && styles.activeTabText]}>
+              DISCOVER
+            </Text>
+            {selectedTab === 'DISCOVER' && <View style={styles.underline} />}
+          </TouchableOpacity>
         </View>
         <View style={styles.horizontalLine} />
 
@@ -258,10 +249,10 @@ export default function DiscoverCamera({ route }) {
           그림자가 지지 않도록 사진을 찍어주세요.
         </Text>
         <TouchableOpacity
-          style={[styles.selectedButton]}
+          style={[styles.primaryButton]}
           onPress={handleAnalyze}
         >
-          <Text style={styles.selectedButtonText}>분석하기</Text>
+          <Text style={styles.buttonText}>분석하기</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -296,13 +287,9 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
     marginHorizontal: 20,
     marginTop: 15,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
   },
   tabItem: {
     alignItems: 'center',
@@ -375,19 +362,25 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     marginHorizontal: 100,
   },
-  selectedButton: {
-    width: '90%',
+  primaryButton: {
     backgroundColor: '#FFBCC2',
-    paddingVertical: 17,
-    paddingHorizontal: 100,
-    borderRadius: 10,
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+    marginHorizontal: 20,
     marginBottom: 20,
   },
-  selectedButtonText: {
-    fontSize: 14,
-    fontWeight: 400,
-    color: '#F6F1FB',
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
