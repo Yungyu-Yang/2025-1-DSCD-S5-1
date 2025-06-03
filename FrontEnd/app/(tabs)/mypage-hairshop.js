@@ -113,7 +113,12 @@ export default function MypageHairshop() {
       savedHairshops.map((shop) => (
         <View key={shop.hairshop_rec_id} style={styles.shopCard}>
            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-             <Text style={styles.shopName}>{shop.hairshop}</Text>
+             <TouchableOpacity
+                onPress={() =>
+                  Linking.openURL(`https://map.naver.com/v5/search/${encodeURIComponent(shop.hairshop)}`)
+                        }>
+                <Text style={styles.shopName}>{shop.hairshop}</Text>
+            </TouchableOpacity>
              <TouchableOpacity onPress={() => toggleSaveHairshop(shop.hairshop_rec_id)}>
                <Feather
                  name={'bookmark'}
