@@ -1,9 +1,24 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import api from '../config/api';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const [name, setName] = useState('사용자');
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await api.get('/user/info');
+        setName(response.data.name);
+      } catch (error) {
+        console.error('Failed to fetch user info:', error);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
 
   return (
     <ScrollView 
@@ -15,7 +30,7 @@ export default function WelcomeScreen() {
       <View style={styles.topSection}>
         <Image source={require('../../assets/logo.png')} style={styles.image} />
         <Text style={styles.WelcomeText}>
-          안녕하세요 사용자님,{'\n'}
+          안녕하세요 {name}님,{'\n'}
           Mohitto에 오신걸 환영해요!
         </Text>
 
