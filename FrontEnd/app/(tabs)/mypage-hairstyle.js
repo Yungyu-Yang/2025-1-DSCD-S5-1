@@ -47,12 +47,14 @@ export default function MyPageHairstyle() {
   const toggleSaveHair = async (hairRecId) => {
     try {
       const response = await api.put(`/user/hair-recommendations/${hairRecId}/toggle-save`);
-      console.log('[INFO] 헤어 저장 상태 토글 성공:', response.data);
-      // 저장 해제 시 목록에서 제거
-      if (!response.data.is_saved) {
-        setSavedHairstyles(prevList => prevList.filter(hair => hair.hair_rec_id !== hairRecId));
-      }
-      // 저장 시에는 이미 목록에 있으므로 별도 추가 로직 불필요 (loadSavedHairstyles에서 가져옴)
+      console.log('[INFO] 헤어 저장 상태 토글 성공:', response.data); // { "hair_rec_id": ..., "is_saved": true/false }
+
+      // 상태 업데이트: 해당 항목의 is_saved 상태만 변경
+      setSavedHairstyles(prevList =>
+        prevList.map(hair =>
+          hair.hair_rec_id === hairRecId ? { ...hair, is_saved: response.data.is_saved } : hair
+        )
+      );
     } catch (error) {
       console.error('[ERROR] 헤어 저장 상태 토글 실패:', error);
       Alert.alert('오류', '헤어 저장 상태 변경에 실패했습니다.');
@@ -72,7 +74,7 @@ export default function MyPageHairstyle() {
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push('/home-discover')}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Feather name="chevron-left" size={24} color="white" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/welcome')}>
@@ -108,12 +110,12 @@ export default function MyPageHairstyle() {
       <View style={styles.tabs}>
         <TouchableOpacity onPress={() => router.push('/mypage-hairstyle')}
           style={styles.tabItem}>
-          <Text style={[styles.tabText, pathname === '/mypage-hairstyle' && styles.activeTab]}>Hairstyle</Text>
+          <Text style={[styles.tabText, pathname === '/mypage-hairstyle' && styles.activeTabText]}>Hairstyle</Text>
           {pathname === '/mypage-hairstyle' && <View style={styles.underline} />}
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('./mypage-hairshop')}
           style={styles.tabItem}>
-          <Text style={[styles.tabText, pathname === 'mypage-hairshop' && styles.activeTab]}>Hairshop</Text>
+          <Text style={[styles.tabText, pathname === 'mypage-hairshop' && styles.activeTabText]}>Hairshop</Text>
           {pathname === '/mypage-hairshop' && <View style={styles.underline} />}
         </TouchableOpacity>
       </View>
@@ -125,24 +127,26 @@ export default function MyPageHairstyle() {
         ) : savedHairstyles.length === 0 ? (
           <Text style={{ textAlign: 'center', marginTop: 20, color: '#888' }}>저장된 헤어스타일이 없습니다.</Text>
         ) : (
-          savedHairstyles.map((style) => (
-            <View key={style.hair_rec_id} style={styles.styleCard}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingHorizontal: 10 }}>
-                 <Text style={styles.styleName}>{style.hair_name}</Text>
-                 <TouchableOpacity onPress={() => toggleSaveHair(style.hair_rec_id)}>
-                   <Feather
-                     name={'bookmark'} // 저장된 항목이므로 항상 채워진 북마크 아이콘
-                     size={24}
-                     color={'#FFBCC2'}
-                   />
-                 </TouchableOpacity>
-               </View>
-              <Image
-                source={{ uri: style.simulation_image_url || '../../assets/style_example.png' }}
-                style={styles.styleImage}
-              />
-            </View>
-          ))
+          <View style={styles.hairstyleListContainer}>
+            {savedHairstyles.map((style) => (
+              <View key={style.hair_rec_id} style={styles.styleCard}>
+                <View style={styles.styleCardHeader}>
+                  <Text style={styles.styleName}>{style.hair_name}</Text>
+                  <TouchableOpacity onPress={() => toggleSaveHair(style.hair_rec_id)}>
+                    <Feather
+                      name={'bookmark'}
+                      size={24}
+                      color={style.is_saved ? "#FF6B7A" : "#FFD6DB"}
+                    />
+                  </TouchableOpacity>
+                </View>
+                <Image
+                  source={{ uri: style.simulation_image_url || '../../assets/style_example.png' }}
+                  style={styles.styleImage}
+                />
+              </View>
+            ))}
+          </View>
         )}
       </ScrollView>
     </View>
@@ -172,7 +176,9 @@ const styles = StyleSheet.create({
   profileCard: {
     backgroundColor: '#FFEFF1',
     borderRadius: 10,
-    margin: 20,
+    marginHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 10,
     padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
@@ -190,53 +196,63 @@ const styles = StyleSheet.create({
   },
   tabs: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 8,
-    gap: 15,
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+    backgroundColor: 'white',
+    marginHorizontal: 0,
+    marginBottom: 0,
+    marginTop: 10,
   },
   tabText: {
-    fontSize: 16,
-    color: '#FF8994',
+    fontSize: 14,
+    color: '#aaa',
   },
-  activeTab: {
-    color: '#FF8994',
+  activeTabText: {
+    fontWeight: 'bold',
+    color: '#FFBCC2',
   },
   divider: {
     height: 1,
-    backgroundColor: '#D9D9D9',
-    marginHorizontal: 20,
+    backgroundColor: '#eee',
+    marginHorizontal: 0,
     marginBottom: 10,
   },
   imageContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     alignSelf: 'center'
   },
-  styleImage1: {
-    width: 103,
-    height: 106,
-    alignSelf: 'center',
-    marginBottom: 15
-  },
-  styleCard1: {
+  styleCard: {
     backgroundColor: '#FFEEEF',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    padding: 15,
+    marginHorizontal: '1.5%',
+    marginBottom: 15,
+    padding: 10,
     borderRadius: 10,
-    width: 152,
-    height: 188
+    alignItems: 'center',
+    width: '47%',
+  },
+  styleImage: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'cover',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  styleName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'black',
+    textAlign: 'center',
+    flex: 1,
   },
   underline: {
     marginTop: 3,
     top: 8,
     height: 2,
+    backgroundColor: '#FFBCC2',
     width: '100%',
-    backgroundColor: '#CCCCCC',
   },
   tabItem: {
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
   },
   logoutButton: {
     position: 'absolute',
@@ -248,25 +264,20 @@ const styles = StyleSheet.create({
     color: '#FF8994',
     fontSize: 14,
   },
-  styleCard: {
-    backgroundColor: '#FFEEEF',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    padding: 15,
-    borderRadius: 10,
+  hairstyleListContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginTop: 10,
+  },
+  styleCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  styleImage: {
-    width: 150,
-    height: 150,
-    resizeMode: 'cover',
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  styleName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#3F414E',
+    width: '100%',
+    paddingHorizontal: 5,
+    marginBottom: 5,
   },
 });
 
