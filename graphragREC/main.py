@@ -1,5 +1,6 @@
 # graphragREC/main.py
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List
 import json
@@ -94,25 +95,28 @@ def recommend(user_input: UserRequest):
 
         # Main API로 전송
         try:
-            # [개발용]
-            response = requests.post("http://main-api:8000/save-recommendation/", json=final_result)
-            # # [운영용]
-            # response = requests.post("http://43.202.9.255:8000/save-recommendation/", json=final_result)
+            print("[7단계] Main API로 결과 전송 시작")
+            # # [개발용]
+            # response = requests.post("http://main-api:8000/save-recommendation/", json=final_result)
+            # [운영용]
+            response = requests.post("http://43.201.129.41:8000/save-recommendation/", json=final_result)
             response.raise_for_status()
             print("[INFO] Main API 서버에 추천 결과 저장 성공")
         except Exception as e:
             print(f"[ERROR] Main API 저장 실패: {e}")
 
         return final_result
+        # return JSONResponse(content=final_result, status_code=200)
 
     except Exception as e:
+        print(f"[에러] 처리 중 예외 발생: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # uvicorn으로 포트지정
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8002)
-
+#################################3
 # import json
 # import pandas as pd
 # from first_recommendation import get_first_recommendations

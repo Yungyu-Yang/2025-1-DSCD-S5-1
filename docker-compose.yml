@@ -1,45 +1,58 @@
-version: '3.8'
+version: '3.8' # Docker Compose 파일 형식 버전
 
 services:
   main-api:
-    image: leeseolhoo/main-api:0531 
+    image: seonyeoljeong/main-api:0603
     container_name: main-api
     ports:
-      - "8000:8000"
+      - "8000:8000" # 호스트의 8000번 포트를 컨테이너의 8000번 포트와 연결
     networks:
       - dscd-network
     env_file:
-      - ./BackEnd/.env
+      - ./BackEnd/.env # main-api의 환경 변수 파일 경로
 
   face-extractor:
-    image: seonyeoljeong/extract_face:0526
+    image: seonyeoljeong/extract_face:0603
     container_name: face-extractor
     ports:
-      - "8001:8001" 
+      - "8001:8001" # 호스트의 8001번 포트를 컨테이너의 8001번 포트와 연결
     networks:
       - dscd-network
+    # face-extractor가 main-api 또는 stable-hair에 의존한다면 추가 (선택 사항)
+    # depends_on:
+    #   - main-api
+    #   - stable-hair
 
   graphrag:
-    image: leeseolhoo/graphrag:0531
+    image: seonyeoljeong/graphrag:0603
     container_name: graphrag
     ports:
-      - "8002:8002"
+      - "8002:8002" # 호스트의 8002번 포트를 컨테이너의 8002번 포트와 연결
     networks:
       - dscd-network
     env_file:
-      - ./graphragREC/.env 
+      - ./graphragREC/.env
+    # graphrag는 main-api에 결과를 전송하므로, main-api가 먼저 시작되어야 합니다.
+    depends_on:
+      - main-api
 
   stable-hair:
-    image: leeseolhoo/stable_hair:0531 
+    image: leeseolhoo/stable_hair:0604
     container_name: stable-hair
     ports:
-      - "8003:8003"
+      - "8003:8003" # 호스트의 8003번 포트를 컨테이너의 8003번 포트와 연결
     networks:
       - dscd-network
-    environment: 
-      - MAIN_API_URL=http://main-api:8000
+    # stable-hair가 main-api에 결과를 보내고, face-extractor 및 graphrag와도 상호작용하므로 의존성을 추가합니다.
+    depends_on:
+      - main-api
+      - face-extractor
+      - graphrag
+    # 환경 변수는 env_file이 더 권장되지만, 명확성을 위해 environment 섹션도 허용됩니다.
+    environment:
+      - MAIN_API_URL=http://main-api:8000 # Docker Compose 네트워크 내에서 서비스 이름으로 통신
     env_file:
-      - ./Hair_Transfer/.env 
+      - ./Hair_Transfer/.env
     deploy:
       resources:
         reservations:
@@ -49,4 +62,5 @@ services:
               capabilities: [gpu]
 
 networks:
-  dscd-network:
+  dscd-network: # dscd-network라는 이름의 브릿지 네트워크를 정의합니다.
+    driver: bridge # 기본값이므로 명시하지 않아도 되지만, 명확성을 위해 유지합니다.

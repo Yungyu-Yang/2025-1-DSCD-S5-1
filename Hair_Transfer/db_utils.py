@@ -1,7 +1,7 @@
 import os
 import pymysql
 from dotenv import load_dotenv
-from datetime import datetime, timezone
+from datetime import datetime, timezone # 이 임포트는 get_request_and_styles 함수 내에서 사용되지 않으므로 제거 가능하지만, 여기서는 원본 그대로 유지합니다.
 
 # .env 파일 로드
 load_dotenv()
@@ -26,7 +26,8 @@ def get_request_and_styles(user_id: int, request_id: int):
     """
     1) request_table에서 user_image_url, hair_length, sex, has_bangs 조회
     2) result_table에서 최신 얼굴형(face_type) 조회
-    3) hair_recommendation_table + hairstyle_table + request_table 조인해 최종 스타일 목록 조회
+    3) hair_recommendation_table + hairstyle_table 조인해 최종 스타일 목록 조회
+       (단, 이제 얼굴형 및 머리 기장 조건 없이 user_id와 request_id로만 필터링)
     Returns:
       - user_image_url: str or None
       - style_infos: list of dict
@@ -35,6 +36,7 @@ def get_request_and_styles(user_id: int, request_id: int):
     try:
         with conn.cursor() as cur:
             # 1) 사용자 이미지 URL, 기장, 성별, 앞머리 유무 조회
+            # 이 정보들은 이제 추천 쿼리에서 필터링 조건으로 사용되지 않습니다.
             cur.execute(
                 """
                 SELECT user_image_url, hair_length, sex, has_bangs
@@ -48,11 +50,11 @@ def get_request_and_styles(user_id: int, request_id: int):
             if not req:
                 return None, []
             user_image_url = req['user_image_url']
-            hair_length    = req['hair_length']
-            sex            = req['sex'] # 성별 추가
-            has_bangs      = req['has_bangs'] # 앞머리 유무 추가
+            # hair_length, sex, has_bangs 변수는 이제 추천 쿼리에 전달되지 않습니다.
+            # face_type 변수도 마찬가지입니다.
 
-            # 2) 최신 얼굴형(face_type) 조회 (result_table에 user_id 컬럼 없음)
+            # 2) 최신 얼굴형(face_type) 조회
+            # 이 정보도 이제 추천 쿼리에서 필터링 조건으로 사용되지 않습니다.
             cur.execute(
                 """
                 SELECT face_type
@@ -65,10 +67,11 @@ def get_request_and_styles(user_id: int, request_id: int):
             )
             res = cur.fetchone()
             if not res:
+                # 얼굴형 정보가 없으면 추천 목록도 없다고 간주 (서비스 로직에 따라 변경 가능)
                 return user_image_url, []
-            face_type = res['face_type']
 
-            # 3) 추천 스타일 정보 조회 (성별, 길이, 앞머리, 얼굴형 조건 적용)
+            # 3) 추천 스타일 정보 조회 (user_id와 request_id 조건만 사용)
+            # request_table과의 조인 및 모든 필터링 조건 제거
             sql_rec = """
                 SELECT
                   hr.user_id,
@@ -80,59 +83,14 @@ def get_request_and_styles(user_id: int, request_id: int):
                 FROM hair_recommendation_table AS hr
                 JOIN hairstyle_table AS h
                   ON hr.hair_id = h.hair_id
-                JOIN request_table AS r -- request_table을 다시 조인하여 r.sex, r.hair_length, r.has_bangs, r.face_type 사용
-                  ON hr.request_id = r.request_id
-                WHERE hr.user_id=%s
-                  AND hr.request_id=%s
-                  AND (
-                      -- 남성 조건
-                      (r.sex = '남성' AND
-                          -- 길이 매핑 조건 (남성)
-                          (
-                              (h.hairstyle_length IS NULL AND r.hair_length IN ('숏', '미디움'))
-                              OR (h.hairstyle_length IN ('S', 'M', 'L') AND r.hair_length = '롱')
-                          )
-                          -- 얼굴형 매핑 조건 (남성)
-                          AND h.hairstyle_face = CASE
-                              WHEN r.face_type IN ('네모형', '둥근형') THEN 'R'
-                              WHEN r.face_type IN ('긴형', '계란형', '하트형') THEN 'S'
-                              ELSE NULL
-                          END
-                      )
-                      OR
-                      -- 여성 조건
-                      (r.sex = '여성' AND
-                          -- 길이 매핑 조건 (여성)
-                          h.hairstyle_length = CASE r.hair_length
-                              WHEN '숏' THEN 'S'
-                              WHEN '단발' THEN 'S'
-                              WHEN '중단발' THEN 'M'
-                              WHEN '장발' THEN 'L'
-                              ELSE NULL
-                          END
-                          -- 앞머리 매핑 조건 (여성)
-                          -- **주의**: hairstyle_table에 hairstyle_has_bangs 컬럼이 있어야 합니다.
-                          -- 없거나 컬럼명이 다르다면 이 조건을 제거하거나 수정하세요.
-                          AND h.hairstyle_has_bangs = CASE r.has_bangs
-                              WHEN '있음' THEN 'Y'
-                              WHEN '없음' THEN 'N'
-                              ELSE NULL
-                          END
-                          -- 얼굴형 매핑 조건 (여성)
-                          AND h.hairstyle_face = CASE
-                              WHEN r.face_type IN ('네모형', '둥근형') THEN 'R'
-                              WHEN r.face_type IN ('긴형', '계란형', '하트형') THEN 'S'
-                              ELSE NULL
-                          END
-                      )
-                  )
+                WHERE hr.user_id = %s
+                  AND hr.request_id = %s;
             """
-            # SQL 쿼리의 %s 플레이스홀더에 맞는 인자 전달 (user_id, request_id만 쿼리 자체에서 사용)
-            # 나머지 값들은 r.sex, r.hair_length, r.has_bangs, r.face_type 으로 쿼리 안에서 사용됩니다.
+            # 쿼리에 필요한 인자는 user_id와 request_id 뿐입니다.
             cur.execute(sql_rec, (user_id, request_id))
             style_infos = cur.fetchall()
 
-        conn.commit()
+        conn.commit() # SELECT 쿼리에서는 일반적으로 commit이 필요 없지만, 기존 코드 구조를 유지합니다.
         return user_image_url, style_infos
 
     except Exception as e:
