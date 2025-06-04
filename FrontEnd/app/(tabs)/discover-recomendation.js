@@ -387,6 +387,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     padding: 5,
+    marginTop: -5,
   },
   hairshopHeader: {
     flexDirection: 'row',

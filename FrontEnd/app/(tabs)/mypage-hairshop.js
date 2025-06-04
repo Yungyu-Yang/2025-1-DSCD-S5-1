@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Linking, ActivityIndicator, Alert } from 'react-native';
-import { useRouter, usePathname } from 'expo-router';
+import { useRouter, usePathname, useFocusEffect } from 'expo-router';
 import api from '../config/api';
 import { authService } from '../services/authService';
 import { Feather } from '@expo/vector-icons';
@@ -16,6 +16,13 @@ export default function MypageHairshop() {
     loadUserProfile();
     loadSavedHairshops();
   }, []);
+
+  // 화면 포커스 시 저장된 미용실 목록 다시 불러오기
+  useFocusEffect(
+    React.useCallback(() => {
+      loadSavedHairshops();
+    }, [])
+  );
 
   const loadUserProfile = async () => {
     try {
@@ -71,7 +78,7 @@ export default function MypageHairshop() {
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.push('/home-discover')}>
           <Feather name="chevron-left" size={24} color="white" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/welcome')}>
@@ -79,6 +86,14 @@ export default function MypageHairshop() {
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/mypage-hairstyle')}>
           <Image source={require('../../assets/mypage.png')} style={styles.mypageimage} />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.headerButtons}>
+        <TouchableOpacity onPress={() => router.push('/discover-result')} style={styles.smallButton}>
+          <Text style={styles.smallButtonText}>Result</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/discover-recomendation')} style={styles.smallButton}>
+          <Text style={styles.smallButtonText}>Rec</Text>
         </TouchableOpacity>
       </View>
       <Text style={{ fontSize: 20, marginTop: 40, left: 20 }}>마이페이지</Text>
@@ -258,5 +273,25 @@ const styles = StyleSheet.create({
     color: '#FF8994',
     fontSize: 14,
   },
+  headerButtons: {
+    flexDirection: 'row',
+    position: 'absolute',
+    right: 15,
+    top: 65,
+    gap: 5,
+  },
+  smallButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  smallButtonText: {
+    fontSize: 11,
+    color: 'rgba(0, 0, 0, 0.7)',
+    fontWeight: 'normal',
+  }
 });
 
