@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,6 +16,8 @@ export default function DiscoverCamera({ route }) {
   const [token, setToken] = useState(null);
   const [surveyData, setSurveyData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisRequestId, setAnalysisRequestId] = useState(null);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -56,7 +58,11 @@ export default function DiscoverCamera({ route }) {
       } catch (error) {
         console.error('초기화 중 오류:', error);
         Alert.alert('오류', '데이터를 불러오는 중 문제가 발생했습니다.');
-        router.replace('/discover-survey');
+        if (!surveyData || !token || !permission?.granted) {
+          router.replace('/discover-survey');
+        } else {
+          setIsLoading(false);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -64,6 +70,41 @@ export default function DiscoverCamera({ route }) {
 
     initializeData();
   }, []);
+
+  useEffect(() => {
+    let checkInterval;
+
+    if (isAnalyzing && analysisRequestId && !isLoading) {
+      console.log('[INFO] 분석 결과 준비 확인 시작', analysisRequestId);
+      checkInterval = setInterval(async () => {
+        try {
+          const response = await api.get(`/user/result/${analysisRequestId}`);
+          console.log('[DEBUG] 분석 결과 확인 응답:', response.data);
+          if (response.data && response.data.face_type) {
+            console.log('[INFO] 분석 결과 준비 완료.');
+            setIsAnalyzing(false);
+            clearInterval(checkInterval);
+            router.replace({
+              pathname: '/discover-result',
+              params: { resultData: JSON.stringify(response.data) }
+            });
+          }
+        } catch (err) {
+          if (err.response?.status === 404) {
+            console.log('[INFO] 아직 분석 결과 없음 (404). 계속 확인.');
+          } else {
+            console.warn('[WARN] 분석 결과 확인 중 예상치 못한 오류 발생:', err);
+          }
+        }
+      }, 5000);
+    }
+
+    return () => {
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
+    };
+  }, [isAnalyzing, analysisRequestId, isLoading]);
 
   const takePicture = async () => {
     try {
@@ -160,22 +201,18 @@ export default function DiscoverCamera({ route }) {
       console.log('API 응답:', response.data);
 
       if (response.data.success) {
-        // 분석 완료 후 설문 데이터 삭제
+        // 분석 완료 후 설문 데이터 삭제 (이동 전에 삭제)
         await AsyncStorage.removeItem('surveyData');
         
-        Alert.alert('성공', '분석이 완료되었습니다.');
-        router.push({
-          pathname: '/discover-result',
-          params: { 
-            resultId: response.data.request_id,
-            ...response.data
-          }
-        });
+        setAnalysisRequestId(response.data.data.request_id);
+        setIsAnalyzing(true);
       } else {
-        Alert.alert('오류', '분석 중 문제가 발생했습니다.');
+        setIsAnalyzing(false);
+        Alert.alert('오류', response.data.message || '분석 요청 중 문제가 발생했습니다.');
       }
     } catch (error) {
       console.error('분석 중 오류:', error);
+      setIsAnalyzing(false);
       if (error.response?.status === 401) {
         Alert.alert('오류', '인증이 만료되었습니다. 다시 로그인해주세요.');
         router.replace('/login');
@@ -198,6 +235,13 @@ export default function DiscoverCamera({ route }) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Text>로딩 중...</Text>
+      </View>
+    );
+  } else if (isAnalyzing) {
+    return (
+      <View style={styles.analysisLoadingContainer}>
+        <ActivityIndicator size="large" color="#FFBCC2" />
+        <Text style={styles.analysisLoadingText}>분석 결과를 기다리는 중...</Text>
       </View>
     );
   }
@@ -382,5 +426,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  analysisLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)', // 반투명 흰색 배경
+    position: 'absolute', // 전체 화면을 덮도록 설정
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10, // 다른 요소들 위에 표시
+  },
+  analysisLoadingText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: '#333',
+    fontWeight: 'bold',
   },
 });
