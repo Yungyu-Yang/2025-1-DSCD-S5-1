@@ -35,19 +35,7 @@ export default function HomeDiscover() {
           최적의 헤어스타일을 탐색해보세요!
         </Text>
         <View style={styles.imageContainer}>
-          <Image source={require('../../assets/example.png')} style={styles.exampleImage} />
-          {/* 선 1 */}
-          <View style={[styles.line, { top: 140, right: 47, width: '25%' }]} />
-          {/* 선 2 */}
-          <View style={[styles.line, { top: 163, left: 125, transform: [{ rotate: '-50deg' }] }]} />
-          {/* 점 1 */}
-          <View style={[styles.dot, { top: 185, left: 172 }]} />
-          {/* 선 3 */}
-          <View style={[styles.line, { top: 110, left: 10 }]} />
-          {/* 선 4 */}
-          <View style={[styles.line2, { top: 125, left: 62, transform: [{ rotate: '50deg' }] }]} />
-          {/* 점 2 */}
-          <View style={[styles.dot, { top: 136, left: 90 }]} />
+          <Image source={require('../../assets/example_simulation.png')} style={styles.exampleImage} />
         </View>
         <TouchableOpacity onPress={() => router.push('./discover-survey')} style={styles.startButton}>
           <View style={styles.startButtonContent}>
@@ -156,24 +144,5 @@ const styles = StyleSheet.create({
   startButtonContent: {
     alignItems: 'center',
     flexDirection: 'row',
-  },
-  line: {
-    position: 'absolute',
-    width: 60,
-    height: 2,
-    backgroundColor: 'white',
-  },
-  line2: {
-    position: 'absolute',
-    width: 40,
-    height: 2,
-    backgroundColor: 'white',
-  },
-  dot: {
-    position: 'absolute',
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'white',
   },
 });
