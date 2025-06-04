@@ -46,7 +46,7 @@ export default function DiscoverRecomendation() {
 
         api.get(`/user/hair-recommendations/${requestId}`)
           .then(res2 => {
-            const hairs = res2.data;
+            const hairs = res2.data.slice(0, 4); // 최대 4개까지만 가져오기
             setHairList(hairs);
             if (hairs.length === 0) {
               setError('추천된 헤어가 없습니다.');
@@ -181,10 +181,29 @@ export default function DiscoverRecomendation() {
             </>
           ) : currentHair ? (
             <>
+              <View style={{ alignItems: 'center', marginTop: 10, marginBottom: 20 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: 300 }}>
+                  <TouchableOpacity onPress={goPrev} disabled={step === 0}>
+                    <Feather name='chevron-left' size={20} color={step === 0 ? '#ccc' : '#FFBC22'} />
+                  </TouchableOpacity>
+                  <Text style={{ marginHorizontal: 20, color: '#FFBCC2' }}>{step + 1}/{totalPages}</Text>
+                  <TouchableOpacity onPress={goNext} disabled={step === totalPages - 1}>
+                    <Feather name='chevron-right' size={20} color={step === totalPages - 1 ? '#ccc' : '#FFBCC2'} />
+                  </TouchableOpacity>
+                </View>
+              </View>
               <Text style={styles.styleText}>{currentHair.hair_name}</Text>
               <View style={styles.imageContainer}>
                 {(!currentHair.simulation_image_url || currentHair.simulation_image_url === 'dummy.jpg') ? (
-                  <View style={{ width: 325, height: 300, backgroundColor: 'transparent' }} />
+                  <View style={styles.noImageContainer}>
+                    <Text style={styles.noImageText}>이미지 준비 중</Text>
+                    <TouchableOpacity 
+                      onPress={loadRecommendations}
+                      style={styles.refreshButton}
+                    >
+                      <Text style={styles.refreshButtonText}>새로고침</Text>
+                    </TouchableOpacity>
+                  </View>
                 ) : (
                   <Image source={{ uri: currentHair.simulation_image_url }} style={styles.exampleImage} />
                 )}
@@ -235,17 +254,6 @@ export default function DiscoverRecomendation() {
                   </View>
                 ))
               )}
-              <View style={{ alignItems: 'center', marginTop: 20 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: 300 }}>
-                  <TouchableOpacity onPress={goPrev} disabled={step === 0}>
-                    <Feather name='chevron-left' size={20} color={step === 0 ? '#ccc' : '#FFBC22'} />
-                  </TouchableOpacity>
-                  <Text style={{ marginHorizontal: 20, color: '#FFBCC2' }}>{step + 1}/{totalPages}</Text>
-                  <TouchableOpacity onPress={goNext} disabled={step === totalPages - 1}>
-                    <Feather name='chevron-right' size={20} color={step === totalPages - 1 ? '#ccc' : '#FFBCC2'} />
-                  </TouchableOpacity>
-                </View>
-              </View>
               <TouchableOpacity
                 onPress={() => router.push('/discover-result')}
                 style={styles.goToResultButton}
@@ -254,6 +262,16 @@ export default function DiscoverRecomendation() {
               </TouchableOpacity>
             </>
           ) : null}
+          {/* 설문 링크 섹션 추가 */}
+          {!loading && !error && hairList.length > 0 && step === totalPages - 1 && (
+            <View style={styles.surveyContainer}>
+              <Text style={styles.surveyText}>추천 결과는 만족스러우셨나요?</Text>
+              <Text style={styles.surveyText}>서비스 개선을 위한 소중한 의견을 들려주세요!</Text>
+              <TouchableOpacity onPress={() => Linking.openURL('https://docs.google.com/forms/d/e/1FAIpQLScYPRMcp8CZA6IQJWplyva7zmJBktZoHuqLrkDZ-InSpCnZKA/viewform?usp=header')}>
+                <Text style={styles.surveyLinkText}>✨ 설문 참여하기 ✨</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </ScrollView>
       </View>
     </View>
@@ -326,6 +344,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
+    height: 480,
   },
   exampleImage: {
     width: '90%',
@@ -398,5 +417,55 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  noImageContainer: {
+    width: '90%',
+    height: 480,
+    backgroundColor: '#F6F1FB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+    gap: 15,
+  },
+  noImageText: {
+    color: '#FFBCC2',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  refreshButton: {
+    backgroundColor: '#FFBCC2',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  refreshButtonText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  surveyContainer: {
+    marginTop: 30,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  surveyText: {
+    fontSize: 15,
+    color: '#555',
+    textAlign: 'center',
+    marginBottom: 5,
+  },
+  surveyLinkText: {
+    fontSize: 16,
+    color: '#007BFF', // 링크 색상
+    textDecorationLine: 'underline', // 밑줄
+    marginTop: 10,
+    fontWeight: 'bold',
   },
 });
