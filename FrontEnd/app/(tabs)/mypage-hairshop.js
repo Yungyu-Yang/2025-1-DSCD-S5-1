@@ -71,7 +71,7 @@ export default function MypageHairshop() {
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push('/home-discover')}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Feather name="chevron-left" size={24} color="white" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/welcome')}>
@@ -107,12 +107,12 @@ export default function MypageHairshop() {
       <View style={styles.tabs}>
         <TouchableOpacity onPress={() => router.push('/mypage-hairstyle')}
           style={styles.tabItem}>
-          <Text style={[styles.tabText, pathname === '/mypage-hairstyle' && styles.activeTab]}>Hairstyle</Text>
+          <Text style={[styles.tabText, pathname === '/mypage-hairstyle' && styles.activeTabText]}>Hairstyle</Text>
           {pathname === '/mypage-hairstyle' && <View style={styles.underline} />}
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('./mypage-hairshop')}
           style={styles.tabItem}>
-          <Text style={[styles.tabText, pathname === 'mypage-hairshop' && styles.activeTab]}>Hairshop</Text>
+          <Text style={[styles.tabText, pathname === 'mypage-hairshop' && styles.activeTabText]}>Hairshop</Text>
           {pathname === '/mypage-hairshop' && <View style={styles.underline} />}
         </TouchableOpacity>
       </View>
@@ -137,7 +137,7 @@ export default function MypageHairshop() {
                   <Feather
                     name={'bookmark'}
                     size={20}
-                    color={'#FFBCC2'}
+                    color={shop.is_saved ? "#FF6B7A" : "#FFD6DB"}
                   />
                 </TouchableOpacity>
               </View>
@@ -175,7 +175,9 @@ const styles = StyleSheet.create({
   profileCard: {
     backgroundColor: '#FFEFF1',
     borderRadius: 10,
-    margin: 20,
+    marginHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 10,
     padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
@@ -193,38 +195,45 @@ const styles = StyleSheet.create({
   },
   tabs: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 8,
-    gap: 15,
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+    backgroundColor: 'white',
+    marginHorizontal: 0,
+    marginBottom: 0,
+    marginTop: 10,
   },
   tabText: {
-    fontSize: 16,
-    color: '#FF8994',
+    fontSize: 14,
+    color: '#aaa',
   },
-  activeTab: {
-    color: '#FF8994'
+  activeTabText: {
+    fontWeight: 'bold',
+    color: '#FFBCC2',
   },
   divider: {
     height: 1,
-    backgroundColor: '#D9D9D9',
-    marginHorizontal: 20,
+    backgroundColor: '#eee',
+    marginHorizontal: 0,
     marginBottom: 10,
   },
   shopCard: {
     backgroundColor: '#FFE6E9',
-    marginHorizontal: 20,
-    marginBottom: 20,
+    marginHorizontal: 30,
+    marginBottom: 15,
     padding: 15,
     borderRadius: 10,
+    alignItems: 'center',
   },
   shopName: {
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 15,
+    color: '#FFBCC2',
+    marginBottom: 4,
     textAlign: 'center',
   },
   shopDetail: {
-    fontSize: 12,
-    color: '#3F414E',
+    fontSize: 13,
+    color: '#777',
     textAlign: 'center',
     marginTop: 2,
   },
@@ -232,12 +241,12 @@ const styles = StyleSheet.create({
     marginTop: 3,
     top: 8,
     height: 2,
+    backgroundColor: '#FFBCC2',
     width: '100%',
-    backgroundColor: '#CCCCCC',
   },
   tabItem: {
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
   },
   logoutButton: {
     position: 'absolute',

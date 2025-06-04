@@ -127,7 +127,7 @@ export default function DiscoverRecomendation() {
       </View>
       <View style={{ flex: 1 }}>
         <View style={styles.buttonContainer}>
-          {['DISCOVER', 'SIMULATION', 'HAIRSHOP'].map((tab) => (
+          {['DISCOVER'].map((tab) => (
             <TouchableOpacity
               key={tab}
               onPress={() => {
@@ -243,44 +243,44 @@ export default function DiscoverRecomendation() {
 
 const styles = StyleSheet.create({
   header: {
+    height: 55,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    backgroundColor: 'white',
+    paddingHorizontal: 15,
     alignItems: 'center',
+    backgroundColor: '#FFBCC2'
   },
   logoimage: {
-    width: 110,
-    height: 40,
+    width: 160,
+    height: 45,
     resizeMode: 'contain',
   },
   mypageimage: {
-    width: 30,
-    height: 30,
+    width: 34,
+    height: 33,
+    resizeMode: 'contain',
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     backgroundColor: 'white',
   },
   tabItem: {
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingBottom: 5,
+    marginHorizontal: 15,
   },
   tabText: {
     fontSize: 14,
-    color: '#aaa',
+    color: '#3F414E',
   },
   activeTabText: {
     fontWeight: 'bold',
-    color: '#FFBCC2',
   },
   underline: {
-    marginTop: 3,
+    marginTop: 15,
     height: 2,
-    backgroundColor: '#FFBCC2',
+    backgroundColor: '#A3A3A3',
     width: '100%',
   },
   horizontalLine: {
@@ -306,15 +306,16 @@ const styles = StyleSheet.create({
   imageContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
   },
   exampleImage: {
-    width: 325,
-    height: 300,
+    width: '90%',
+    height: 480,
     resizeMode: 'cover',
     borderRadius: 12,
   },
   resultText: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#333',
     textAlign: 'center',
     paddingHorizontal: 20,
@@ -334,10 +335,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFBCC2',
     marginBottom: 4,
+    textAlign: 'center',
+    flex: 1,
   },
   hairshopInfo: {
     fontSize: 13,
     color: '#777',
+    textAlign: 'center',
   },
   saveButtonContainer: {
     alignItems: 'center',
@@ -348,8 +352,9 @@ const styles = StyleSheet.create({
   },
   hairshopHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 5,
+    width: '100%',
   },
 });
