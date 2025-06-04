@@ -15,6 +15,7 @@ export default function DiscoverRecomendation() {
   const [hairList, setHairList] = useState([]);
   const [hairshopMap, setHairshopMap] = useState({});
   const [step, setStep] = useState(0);
+  const [resultData, setResultData] = useState(null);
 
   const loadRecommendations = () => {
     setLoading(true);
@@ -31,6 +32,18 @@ export default function DiscoverRecomendation() {
           setLoading(false);
           return;
         }
+
+        api.get(`/user/analysis-results/${requestId}`)
+          .then(resultRes => {
+            console.log('[DEBUG] 분석 결과 데이터:', resultRes.data);
+            if (resultRes.data && resultRes.data.length > 0) {
+              setResultData(resultRes.data[0]);
+            }
+          })
+          .catch(resultErr => {
+            console.error('[ERROR] 분석 결과 불러오기 실패:', resultErr);
+          });
+
         api.get(`/user/hair-recommendations/${requestId}`)
           .then(res2 => {
             const hairs = res2.data;
@@ -233,6 +246,12 @@ export default function DiscoverRecomendation() {
                   </TouchableOpacity>
                 </View>
               </View>
+              <TouchableOpacity
+                onPress={() => router.push('/discover-result')}
+                style={styles.goToResultButton}
+              >
+                <Text style={styles.goToResultButtonText}>분석 결과 확인하기</Text>
+              </TouchableOpacity>
             </>
           ) : null}
         </ScrollView>
@@ -356,5 +375,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 5,
     width: '100%',
+  },
+  goToResultButton: {
+    backgroundColor: '#FFBCC2',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 30,
+    marginVertical: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  goToResultButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
   },
 });

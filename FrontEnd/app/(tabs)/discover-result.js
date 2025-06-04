@@ -97,66 +97,29 @@ export default function DiscoverResult() {
     );
   };
 
-  const handleTriggerGraphRAG = () => {
-    if (!result?.user_id || !result?.request_id) {
-      const msg = 'user_id 또는 request_id가 없습니다.';
-      console.error('[ERROR]', msg);
-      setError(msg);
-      return;
-    }
-
-    const payload = {
-      user_id: result.user_id,
-      request_id: result.request_id,
-    };
-
-    console.log('[DEBUG] GraphRAG 요청 payload:', payload);
-
-    Alert.alert(
-      'GraphRAG 추천 시작',
-      `현재 user_id: ${payload.user_id}, request_id: ${payload.request_id}\n\n추천 생성에 평균적으로 1분 정도 소요됩니다.`,
-      [
-        {
-          text: '확인',
-          onPress: () => sendGraphRAGRequest(payload),
-        },
-        {
-          text: '취소',
-          style: 'cancel',
-        }
-      ]
-    );
-  };
-
   const sendGraphRAGRequest = (payload) => {
-    setLoading(true);
     api.post('/run-recommendation/', payload)
       .then(() => {
         console.log('[INFO] GraphRAG 추천 요청 성공');
-        setLoading(false);
         Alert.alert('성공', '추천이 생성되었습니다. 잠시 후 추천 결과를 확인해주세요.');
       })
       .catch(err => {
         const msg = err?.response?.data?.detail || err.message || '추천 요청 실패';
         console.error('[ERROR] GraphRAG 추천 요청 실패:', msg);
         setError(msg);
-        setLoading(false);
       });
   };
 
   const sendStableHairRequest = (payload) => {
-    setLoading(true);
     api.post('/run-stablehair/', payload)
       .then(() => {
         console.log('[INFO] 추천 요청 성공');
-        setLoading(false);
-        router.push('/discover-recomendation');
+        Alert.alert('성공', '합성 요청을 성공적으로 보냈습니다. 잠시 후 추천 가져오기 버튼을 눌러 결과를 확인해주세요.');
       })
       .catch(err => {
         const msg = err?.response?.data?.detail || err.message || '추천 요청 실패';
         console.error('[ERROR] 추천 요청 실패:', msg);
-        setError(msg);
-        setLoading(false);
+        console.warn('[WARN] 합성 요청 중 오류 발생 (표시 안함):', err);
       });
   };
 
@@ -261,20 +224,20 @@ export default function DiscoverResult() {
               </View>
 
               <View style={styles.buttonContainer}>
-                <TouchableOpacity onPress={handleTriggerRecommendation} style={styles.primaryButton}>
-                  <Text style={styles.buttonText}>추천 받기</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={handleTriggerGraphRAG} style={styles.secondaryButton}>
-                  <Text style={styles.buttonText}>추천 실행</Text>
-                </TouchableOpacity>
-
                 <TouchableOpacity
                   onPress={() => router.push('/discover-recomendation')}
                   style={[styles.secondaryButton, !isRecommendationReady && { opacity: 0.5 }]}
                   disabled={!isRecommendationReady}
                 >
-                  <Text style={styles.buttonText}>추천 가져오기</Text>
+                  <Text style={styles.buttonText}>추천 결과 확인하기</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleTriggerRecommendation}
+                  style={[styles.primaryButton, !isRecommendationReady && { opacity: 0.5 }]}
+                  disabled={!isRecommendationReady}
+                >
+                  <Text style={styles.buttonText}>추천 헤어 합성하기</Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -302,7 +265,7 @@ const styles = StyleSheet.create({
   text: { fontSize: 16, fontWeight: '400', textAlign: 'center', top: 20 },
   imageContainer: { 
     width: '90%', 
-    height: 300, 
+    height: 400,
     top: 30, 
     borderColor: '#FFBCC2', 
     borderWidth: 2, 
