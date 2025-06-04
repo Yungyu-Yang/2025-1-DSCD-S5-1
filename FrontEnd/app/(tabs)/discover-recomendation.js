@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { Linking } from 'react-native';
 import api from '../config/api';
 
 export default function DiscoverRecomendation() {
@@ -63,45 +64,6 @@ export default function DiscoverRecomendation() {
       });
   };
 
-  const toggleSaveHair = (hairRecId, currentSavedStatus) => {
-    api.put(`/user/hair-recommendations/${hairRecId}/toggle-save`)
-      .then(res => {
-        console.log('[INFO] 헤어 저장 상태 토글 성공:', res.data);
-        // hairList 상태 업데이트
-        setHairList(prevList =>
-          prevList.map(hair =>
-            hair.hair_rec_id === hairRecId ? { ...hair, is_saved: res.data.is_saved } : hair
-          )
-        );
-      })
-      .catch(err => {
-        console.error('[ERROR] 헤어 저장 상태 토글 실패:', err);
-        Alert.alert('오류', '헤어 저장 상태 변경에 실패했습니다.');
-      });
-  };
-
-  const toggleSaveHairshop = (hairshopRecId, currentSavedStatus) => {
-    api.put(`/user/hairshop-recommendations/${hairshopRecId}/toggle-save`)
-      .then(res => {
-        console.log('[INFO] 미용실 저장 상태 토글 성공:', res.data);
-        // hairshopMap 상태 업데이트
-        setHairshopMap(prevMap => {
-          const newMap = { ...prevMap };
-          // 현재 hair_rec_id를 찾아서 해당 샵의 is_saved 상태 업데이트
-          for (const hairRecId in newMap) {
-            newMap[hairRecId] = newMap[hairRecId].map(shop =>
-              shop.hairshop_rec_id === hairshopRecId ? { ...shop, is_saved: res.data.is_saved } : shop
-            );
-          }
-          return newMap;
-        });
-      })
-      .catch(err => {
-        console.error('[ERROR] 미용실 저장 상태 토글 실패:', err);
-        Alert.alert('오류', '미용실 저장 상태 변경에 실패했습니다.');
-      });
-  };
-
   useEffect(() => {
     loadRecommendations();
   }, []);
@@ -112,6 +74,46 @@ export default function DiscoverRecomendation() {
 
   const goNext = () => { if (step < totalPages - 1) setStep(step + 1); };
   const goPrev = () => { if (step > 0) setStep(step - 1); };
+
+  // 헤어스타일 저장 토글 함수
+  const toggleSaveHair = async (hairRecId) => {
+    try {
+      const response = await api.put(`/user/hair-recommendations/${hairRecId}/toggle-save`);
+      // 현재 헤어의 저장 상태 업데이트
+      setHairList(prevList => 
+        prevList.map(hair => 
+          hair.hair_rec_id === hairRecId 
+            ? { ...hair, is_saved: response.data.is_saved }
+            : hair
+        )
+      );
+    } catch (error) {
+      console.error('[ERROR] 헤어 저장 상태 토글 실패:', error);
+      Alert.alert('오류', '헤어 저장 상태 변경에 실패했습니다.');
+    }
+  };
+
+  // 미용실 저장 토글 함수
+  const toggleSaveHairshop = async (hairshopRecId) => {
+    try {
+      const response = await api.put(`/user/hairshop-recommendations/${hairshopRecId}/toggle-save`);
+      // 현재 미용실의 저장 상태 업데이트
+      setHairshopMap(prevMap => {
+        const newMap = { ...prevMap };
+        Object.keys(newMap).forEach(hairId => {
+          newMap[hairId] = newMap[hairId].map(shop =>
+            shop.hairshop_rec_id === hairshopRecId
+              ? { ...shop, is_saved: response.data.is_saved }
+              : shop
+          );
+        });
+        return newMap;
+      });
+    } catch (error) {
+      console.error('[ERROR] 미용실 저장 상태 토글 실패:', error);
+      Alert.alert('오류', '미용실 저장 상태 변경에 실패했습니다.');
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
@@ -166,22 +168,25 @@ export default function DiscoverRecomendation() {
             </>
           ) : currentHair ? (
             <>
-              <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
-                <Text style={styles.styleText}>{currentHair.hair_name}</Text>
-                <TouchableOpacity onPress={() => toggleSaveHair(currentHair.hair_rec_id, currentHair.is_saved)} style={{ marginLeft: 10 }}>
-                  <Feather
-                    name={currentHair.is_saved ? 'bookmark' : 'bookmark'}
-                    size={24}
-                    color={currentHair.is_saved ? '#FFBCC2' : '#ccc'}
-                  />
-                </TouchableOpacity>
-              </View>
+              <Text style={styles.styleText}>{currentHair.hair_name}</Text>
               <View style={styles.imageContainer}>
                 {(!currentHair.simulation_image_url || currentHair.simulation_image_url === 'dummy.jpg') ? (
                   <View style={{ width: 325, height: 300, backgroundColor: 'transparent' }} />
                 ) : (
                   <Image source={{ uri: currentHair.simulation_image_url }} style={styles.exampleImage} />
                 )}
+              </View>
+              <View style={styles.saveButtonContainer}>
+                <TouchableOpacity 
+                  onPress={() => toggleSaveHair(currentHair.hair_rec_id)}
+                  style={styles.saveButton}
+                >
+                  <Feather
+                    name="bookmark"
+                    size={24}
+                    color={currentHair.is_saved ? "#FF6B7A" : "#FFD6DB"}
+                  />
+                </TouchableOpacity>
               </View>
               <Text style={styles.resultText}>{currentHair.description}</Text>
               <Text style={{ color: '#FFBCC2', textAlign: 'center', marginTop: 10 }}>추천 미용실</Text>
@@ -190,17 +195,30 @@ export default function DiscoverRecomendation() {
               ) : (
                 currentHairshops.map((shop, idx) => (
                   <View key={idx} style={styles.hairshopBox}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={styles.hairshopName}>{shop.hairshop}</Text>
-                      <TouchableOpacity onPress={() => toggleSaveHairshop(shop.hairshop_rec_id, shop.is_saved)}>
+                    <View style={styles.hairshopHeader}>
+                      <TouchableOpacity
+                        onPress={() =>
+                          Linking.openURL(`https://map.naver.com/v5/search/${encodeURIComponent(shop.hairshop)}`)
+                        }>
+                        <Text style={styles.hairshopName}>{shop.hairshop}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        onPress={() => toggleSaveHairshop(shop.hairshop_rec_id)}
+                        style={styles.saveButton}
+                      >
                         <Feather
-                          name={shop.is_saved ? 'bookmark' : 'bookmark'}
+                          name="bookmark"
                           size={20}
-                          color={shop.is_saved ? '#FFBCC2' : '#ccc'}
+                          color={shop.is_saved ? "#FF6B7A" : "#FFD6DB"}
                         />
                       </TouchableOpacity>
                     </View>
-                    <Text style={styles.hairshopInfo}>리뷰수: {shop.review_count} | 평점: {shop.mean_score?.toFixed(2)}</Text>
+                    <Text style={styles.hairshopInfo}>
+                      리뷰수: {shop.review_count} | 평점: {shop.mean_score?.toFixed(2)}
+                    </Text>
+                    {shop.associated_hair_name && (
+                      <Text style={styles.hairshopInfo}>추천 헤어스타일: {shop.associated_hair_name}</Text>
+                    )}
                   </View>
                 ))
               )}
@@ -320,5 +338,18 @@ const styles = StyleSheet.create({
   hairshopInfo: {
     fontSize: 13,
     color: '#777',
+  },
+  saveButtonContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  saveButton: {
+    padding: 5,
+  },
+  hairshopHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
   },
 });

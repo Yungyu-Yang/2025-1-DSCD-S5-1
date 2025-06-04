@@ -49,6 +49,11 @@ class UserResultResponse(BaseModel):
     rec_color: str
     summary: str
 
+class UserInfoResponse(BaseModel):
+    user_id: int
+    name: str
+    email: str
+
 # face_extract 호출 함수 정의
 def trigger_face_extract(user_id, request_id):
     try:
@@ -315,7 +320,8 @@ def get_hairshop_recommendations(
     limit: int = Query(10, ge=1),
     db: Session = Depends(get_db)
 ):
-    shops = db.query(HairshopRecommendation) \
+    shops = db.query(HairshopRecommendation, HairRecommendation.hair_name) \
+        .join(HairRecommendation, HairRecommendation.hair_rec_id == HairshopRecommendation.hair_rec_id) \
         .filter(HairshopRecommendation.hair_rec_id == hair_rec_id) \
         .order_by(HairshopRecommendation.review_count.desc()) \
         .offset(skip).limit(limit).all()
@@ -324,14 +330,14 @@ def get_hairshop_recommendations(
 
     return [
         {
-            "hairshop_rec_id": s.hairshop_rec_id,
-            "hairshop": s.hairshop,
-            "review_count": s.review_count,
-            "mean_score": s.mean_score,
-            "is_saved": bool(s.is_saved),
-            "associated_hair_name": s.associated_hair_name
+            "hairshop_rec_id": shop.hairshop_rec_id,
+            "hairshop": shop.hairshop,
+            "review_count": shop.review_count,
+            "mean_score": shop.mean_score,
+            "is_saved": bool(shop.is_saved),
+            "associated_hair_name": hair_name
         }
-        for s in shops
+        for shop, hair_name in shops
     ]
 
 @router.put("/user/hair-recommendations/{hair_rec_id}/toggle-save")
@@ -430,3 +436,11 @@ def get_saved_hairshops(
         }
         for shop in saved_shops
     ]
+
+@router.get("/user/info", response_model=UserInfoResponse)
+def get_user_info(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+    return {
+        "user_id": current_user["user_id"],
+        "name": current_user["name"],
+        "email": current_user["email"]
+    }

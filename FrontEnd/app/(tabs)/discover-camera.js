@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -217,28 +217,19 @@ export default function DiscoverCamera({ route }) {
         </TouchableOpacity>
       </View>
 
-      <View style={{ flex: 1 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
         <View style={styles.buttonContainer}>
-          {['DISCOVER', 'SIMULATION', 'HAIRSHOP'].map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => {
-                setselectedTab(tab);
-                if (tab === 'DISCOVER') {
-                  router.push('/home-discover');
-                } else if (tab === 'SIMULATION') {
-                  router.push('/home-simulation');
-                } else {
-                  router.push('/home-hairshop');
-                }
-              }}
-              style={styles.tabItem}>
-              <Text style={[styles.tabText, selectedTab === tab && styles.activeTabText]}>
-                {tab}
-              </Text>
-              {selectedTab === tab && <View style={styles.underline} />}
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity
+            onPress={() => {
+              setselectedTab('DISCOVER');
+              router.push('/home-discover');
+            }}
+            style={styles.tabItem}>
+            <Text style={[styles.tabText, selectedTab === 'DISCOVER' && styles.activeTabText]}>
+              DISCOVER
+            </Text>
+            {selectedTab === 'DISCOVER' && <View style={styles.underline} />}
+          </TouchableOpacity>
         </View>
         <View style={styles.horizontalLine} />
 
@@ -254,16 +245,16 @@ export default function DiscoverCamera({ route }) {
           <TouchableOpacity style={styles.shutterOuter} onPress={takePicture}>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={[styles.selectedButton, { marginTop: 20 }]}
-          onPress={handleAnalyze}
-        >
-          <Text style={styles.selectedButtonText}>분석하기</Text>
-        </TouchableOpacity>
-        <Text style={styles.text}>이마가 나오도록 사진을 찍어주세요.{'\n'}
+        <Text style={styles.text}>이마와 눈썹이 잘 보이도록 촬영해주세요.{'\n'}
           그림자가 지지 않도록 사진을 찍어주세요.
         </Text>
-      </View>
+        <TouchableOpacity
+          style={[styles.primaryButton]}
+          onPress={handleAnalyze}
+        >
+          <Text style={styles.buttonText}>분석하기</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
@@ -296,13 +287,9 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
     marginHorizontal: 20,
     marginTop: 15,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
   },
   tabItem: {
     alignItems: 'center',
@@ -327,7 +314,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 400,
     textAlign: 'center',
-    top: 20
+    color: '#666666',
+    lineHeight: 22,
+    marginTop: 10,
+    marginBottom: 20,
   },
   cameraContainer: {
     width: 369,
@@ -343,10 +333,10 @@ const styles = StyleSheet.create({
   },
   controls: {
     flexDirection: 'row',
-    justifyContent: 'space-arround',
-    alignSelf: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 20,
+    marginBottom: 30,
   },
   previewBox: {
     width: 40,
@@ -371,21 +361,26 @@ const styles = StyleSheet.create({
     borderColor: '#FCE3E6',
     borderWidth: 3,
     marginHorizontal: 100,
-    left: -20
   },
-  selectedButton: {
-    width: '90%',
+  primaryButton: {
     backgroundColor: '#FFBCC2',
-    paddingVertical: 17,
-    paddingHorizontal: 100,
-    borderRadius: 10,
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    alignSelf: 'center',
-    bottom: 40
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+    marginHorizontal: 20,
+    marginBottom: 20,
   },
-  selectedButtonText: {
-    fontSize: 14,
-    fontWeight: 400,
-    color: '#F6F1FB',
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });

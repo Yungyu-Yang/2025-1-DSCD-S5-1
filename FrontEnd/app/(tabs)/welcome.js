@@ -1,17 +1,36 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import api from '../config/api';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const [name, setName] = useState('사용자');
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await api.get('/user/info');
+        setName(response.data.name);
+      } catch (error) {
+        console.error('Failed to fetch user info:', error);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
 
   return (
-    <View style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
       {/* 위쪽 영역 */}
       <View style={styles.topSection}>
         <Image source={require('../../assets/logo.png')} style={styles.image} />
         <Text style={styles.WelcomeText}>
-          안녕하세요 사용자님,{'\n'}
+          안녕하세요 {name}님,{'\n'}
           Mohitto에 오신걸 환영해요!
         </Text>
 
@@ -26,11 +45,14 @@ export default function WelcomeScreen() {
 
       {/* 아래쪽 영역 */}
       <View style={styles.bottomSection}>
-        <TouchableOpacity style={styles.button} onPress={() => router.push('/home-discover')}>
+        <TouchableOpacity 
+          style={styles.button} 
+          onPress={() => router.push('/home-discover')}
+        >
           <Text style={styles.buttonText}>GET STARTED</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -38,7 +60,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFBCC2',
-    alignItems: 'center',
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   topSection: {
     flex: 2.2,
@@ -46,14 +70,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
+    marginBottom: -40,
   },
   bottomSection: {
     flex: 0.5,
     backgroundColor: '#FFABB3',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 20,
     width: '100%',
+    paddingBottom: 20,
+    marginTop: 0,
+    minHeight: 200,
   },
   WelcomeText: {
     color: '#3F4553',
@@ -66,25 +93,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    marginTop: 180,
+    marginTop: 160,
     marginBottom: -60,
-    // overflow: 'hidden'
   },
   circle: {
     position: 'absolute',
   },
   button: {
-    width:'90%',
-    backgroundColor: '#EBEAEC',
-    paddingVertical: 20,
-    paddingHorizontal: 135,
+    width: '90%',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 17,
     borderRadius: 10,
-    marginTop: 50,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   buttonText: {
     color: '#3F414E',
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: 16,
+    fontWeight: '500',
   },
   image: {
     width: 112,

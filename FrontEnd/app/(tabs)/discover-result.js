@@ -155,26 +155,17 @@ export default function DiscoverResult() {
       </View>
       <View style={{ flex: 1 }}>
         <View style={styles.buttonContainer}>
-          {['DISCOVER', 'SIMULATION', 'HAIRSHOP'].map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => {
-                setselectedTab(tab);
-                if (tab === 'DISCOVER') {
-                  router.push('/home-discover');
-                } else if (tab === 'SIMULATION') {
-                  router.push('/home-simulation');
-                } else {
-                  router.push('/home-hairshop');
-                }
-              }}
-              style={styles.tabItem}>
-              <Text style={[styles.tabText, selectedTab === tab && styles.activeTabText]}>
-                {tab}
-              </Text>
-              {selectedTab === tab && <View style={styles.underline} />}
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity
+            onPress={() => {
+              setselectedTab('DISCOVER');
+              router.push('/home-discover');
+            }}
+            style={styles.tabItem}>
+            <Text style={[styles.tabText, selectedTab === 'DISCOVER' && styles.activeTabText]}>
+              DISCOVER
+            </Text>
+            {selectedTab === 'DISCOVER' && <View style={styles.underline} />}
+          </TouchableOpacity>
         </View>
         <View style={styles.horizontalLine} />
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
@@ -202,39 +193,72 @@ export default function DiscoverResult() {
             <>
               <View style={styles.imageContainer}>
                 <Image source={{ uri: result.user_image_url }} style={styles.exampleImage} />
-                <View style={styles.outlineSqure}></View>
               </View>
               <View style={styles.resultBox}>
                 <Text style={styles.resultText}><Text style={styles.resultLabel}>성별:</Text> {result.sex}</Text>
                 <Text style={styles.resultText}><Text style={styles.resultLabel}>얼굴형:</Text> {result.face_type}</Text>
-                <Text style={styles.resultText}><Text style={styles.resultLabel}>피부톤:</Text> {result.skin_tone}</Text>
-                <Text style={styles.resultText}><Text style={styles.resultLabel}>추천 염색:</Text> {result.rec_color}</Text>
+                <View style={styles.colorSection}>
+                  <View style={styles.skinToneContainer}>
+                    <Text style={[styles.resultText, styles.skinToneText]}><Text style={styles.resultLabel}>피부톤:</Text> {result.skin_tone}</Text>
+                    <View style={[styles.colorBlock, { backgroundColor: result.skin_tone }]} />
+                  </View>
+                </View>
+                <View style={styles.colorSection}>
+                  <Text style={styles.resultText}><Text style={styles.resultLabel}>추천 염색:</Text></Text>
+                  <View style={styles.colorBlocksContainer}>
+                    {result.rec_color.split(',').map((color, index) => {
+                      const colorMap = {
+                        'Dark Choco': '#4B2E2B',
+                        'Whale Deep Blue': '#002E5D',
+                        'Dark Ash': '#3B3B3B',
+                        'Dusty Ash': '#6E6E6E',
+                        'Ash Taupe Gray': '#8B8589',
+                        'Ash Rose': '#C48B9F',
+                        'Matt Brown': '#5C4033',
+                        'Ferry Violet': '#7F60A0',
+                        'Ash Beige': '#D3C6B3',
+                        'Milk Tea Gray': '#C2B7A3',
+                        'Deep Bordo Rose': '#7A2937',
+                        'Rose Pink': '#F4838A',
+                        'Sunset Orange': '#FF7043',
+                        'Ash Black': '#1B1B1B',
+                        'Gold Brown': '#A67B2E',
+                        'Ash Blue': '#607D8B',
+                        'Pink Red': '#E53935',
+                        'Red Brown': '#8B2500',
+                        'Burgundy': '#800020',
+                        'Red Wine': '#722F37'
+                      };
+                      return (
+                        <View key={index} style={styles.colorItem}>
+                          <Text style={styles.colorName}>{color.trim()}</Text>
+                          <View 
+                            style={[styles.colorBlock, { backgroundColor: colorMap[color.trim()] || '#000000' }]} 
+                          />
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
                 <Text style={styles.resultText}><Text style={styles.resultLabel}>요약:</Text> {result.summary}</Text>
               </View>
 
-              {/* ✅ 추천 받기 버튼 */}
-              <TouchableOpacity onPress={handleTriggerRecommendation} style={styles.startButton}>
-                <View style={styles.startButtonContent}>
-                  <Text style={styles.startButtonText}>추천 받기</Text>
-                </View>
-              </TouchableOpacity>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity onPress={handleTriggerRecommendation} style={styles.primaryButton}>
+                  <Text style={styles.buttonText}>추천 받기</Text>
+                </TouchableOpacity>
 
-              {/* ✅ GraphRAG 추천 실행 버튼 */}
-              <TouchableOpacity onPress={handleTriggerGraphRAG} style={[styles.startButton, { backgroundColor: '#D6A7B1', marginTop: 10 }]}>
-                <View style={styles.startButtonContent}>
-                  <Text style={styles.startButtonText}>추천 실행</Text>
-                </View>
-              </TouchableOpacity>
+                <TouchableOpacity onPress={handleTriggerGraphRAG} style={styles.secondaryButton}>
+                  <Text style={styles.buttonText}>추천 실행</Text>
+                </TouchableOpacity>
 
-              {/* ✅ 추천 가져오기 버튼 */}
-              <TouchableOpacity
-                onPress={() => router.push('/discover-recomendation')}
-                style={[styles.startButton, { backgroundColor: '#D6A7B1', marginTop: 10 }]}
-              >
-                <View style={styles.startButtonContent}>
-                  <Text style={styles.startButtonText}>추천 가져오기</Text>
-                </View>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => router.push('/discover-recomendation')}
+                  style={styles.secondaryButton}
+                >
+                  <Text style={styles.buttonText}>추천 가져오기</Text>
+                </TouchableOpacity>
+              </View>
             </>
           ) : null}
         </ScrollView>
@@ -248,19 +272,127 @@ const styles = StyleSheet.create({
   logoimage: { width: 160, height: 45, resizeMode: 'contain' },
   mypageimage: { width: 34, height: 33, resizeMode: 'contain' },
   horizontalLine: { height: 1, backgroundColor: '#B7B7B7', width: '100%', marginTop: 0, bottom: 5 },
-  buttonContainer: { flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: 20, marginTop: 15 },
+  buttonContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    gap: 12,
+  },
   tabItem: { alignItems: 'center', paddingBottom: 5, marginHorizontal: 15 },
   tabText: { fontSize: 14, color: '#3F414E', fontWeight: '400' },
   activeTabText: { fontWeight: 'bold' },
   underline: { marginTop: 15, height: 2, width: '100%', backgroundColor: '#A3A3A3' },
   text: { fontSize: 16, fontWeight: '400', textAlign: 'center', top: 20 },
-  imageContainer: { width: '90%', height: 300, top: 30, borderColor: '#FFBCC2', borderWidth: 2, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginVertical: 20, position: 'relative' },
-  exampleImage: { resizeMode: 'cover', width: '100%', height: '100%' },
-  startButton: { width: '90%', backgroundColor: '#FFBCC2', paddingVertical: 17, paddingHorizontal: 100, borderRadius: 10, marginTop: 30, marginHorizontal: 30, alignItems: 'center' },
-  startButtonText: { fontSize: 14, fontWeight: '400', color: '#F6F1FB' },
-  startButtonContent: { alignItems: 'center', flexDirection: 'row' },
-  resultText: { textAlign: 'center', marginTop: 45, fontSize: 16 },
-  outlineSqure: { borderColor: '#FF0101', width: 180, height: 258, borderWidth: 1, position: 'absolute' },
-  resultBox: { backgroundColor: '#F6F1FB', borderRadius: 10, marginHorizontal: 20, marginTop: 10, padding: 20, elevation: 2 },
-  resultLabel: { fontWeight: 'bold', color: '#FFBCC2' },
+  imageContainer: { 
+    width: '90%', 
+    height: 300, 
+    top: 30, 
+    borderColor: '#FFBCC2', 
+    borderWidth: 2, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    alignSelf: 'center', 
+    marginVertical: 20, 
+    position: 'relative' 
+  },
+  exampleImage: { 
+    resizeMode: 'cover', 
+    width: '100%', 
+    height: '100%' 
+  },
+  primaryButton: {
+    backgroundColor: '#FFBCC2',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  secondaryButton: {
+    backgroundColor: '#D6A7B1',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  resultBox: {
+    backgroundColor: '#F6F1FB',
+    borderRadius: 15,
+    marginHorizontal: 20,
+    marginTop: 10,
+    padding: 25,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  resultText: {
+    textAlign: 'center',
+    marginTop: 25,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  resultLabel: {
+    fontWeight: 'bold',
+    color: '#FFBCC2',
+  },
+  colorSection: {
+    alignItems: 'center',
+    marginTop: 25,
+    marginBottom: 5,
+  },
+  colorItem: {
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  colorName: {
+    fontSize: 14,
+    color: '#3F414E',
+    marginBottom: 5,
+  },
+  colorBlock: {
+    width: 40,
+    height: 40,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  colorBlocksContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    gap: 20,
+    paddingHorizontal: 10,
+  },
+  skinToneContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  skinToneText: {
+    marginTop: 0,
+  },
 });
