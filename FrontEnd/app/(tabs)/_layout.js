@@ -7,7 +7,7 @@ LogBox.ignoreAllLogs();
 console.log = () => {};
 console.info = () => {};
 console.warn = () => {};
-console.error = () => {};
+// console.error = () => {};
 
 
 export default function TabLayout() {
