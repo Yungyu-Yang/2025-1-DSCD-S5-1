@@ -13,7 +13,7 @@ from utils.pipeline import StableHairPipeline
 from utils.pipeline_cn import StableDiffusionControlNetPipeline
 import io
 import uuid
-# from rembg import remove # rembg 임포트 제거됨
+# from rembg import remove # rembg 임포트 제거됨 (여기서는 더 이상 필요 없음)
 
 torch.cuda.empty_cache()
 torch.cuda.ipc_collect()
@@ -118,8 +118,8 @@ class StableHair:
         image = self.remove_hair_pipeline(
             prompt="",
             negative_prompt="",
-            num_inference_steps=100,
-            guidance_scale=1.5,
+            num_inference_steps=30,
+            guidance_scale=1.3,
             width=W,
             height=H,
             image=id_image,
@@ -142,10 +142,10 @@ def resize_with_padding(image: Image.Image, target_size=(512, 512), fill_color=(
     return new_image
 
 
-def model_call(id_image_buf: io.BytesIO, ref_hair_buf: io.BytesIO, converter_scale=1, scale=1, guidance_scale=1.5, controlnet_conditioning_scale=1):
+def model_call(id_image_buf: io.BytesIO, ref_hair_buf: io.BytesIO, converter_scale=1, scale=1, guidance_scale=1.3, controlnet_conditioning_scale=1):
     """
     주어진 이미지 버퍼들을 사용하여 헤어 전송 모델을 호출하고 결과를 반환합니다.
-    어떤 이미지에도 배경 제거 전처리는 수행하지 않습니다.
+    이 함수에 전달되는 이미지는 이미 배경 제거 전처리가 완료되었다고 가정합니다.
     """
     model = StableHair(config="./configs/hair_transfer.yaml", weight_dtype=torch.float16)
     print("DEBUG(model_call): StableHair model initialized.")
@@ -156,10 +156,10 @@ def model_call(id_image_buf: io.BytesIO, ref_hair_buf: io.BytesIO, converter_sca
     print(f"DEBUG(model_call): Input id_image loaded: size={id_image.size}, mode={id_image.mode}")
     print(f"DEBUG(model_call): Input ref_hair loaded: size={ref_hair.size}, mode={ref_hair.mode}")
 
-    # --- 배경 제거 로직 완전히 제거됨 ---
-    print("DEBUG(model_call): No background removal is applied to any image.")
+    # --- 배경 제거 로직은 image_utils.py의 load_image 함수로 이동됨 ---
+    print("DEBUG(model_call): Background removal is assumed to be handled by image_utils.load_image.")
 
-    # 이제 id_image와 ref_hair 모두 원본 그대로입니다.
+
     # resize_with_padding 적용
     id_image = resize_with_padding(id_image)
     ref_hair = resize_with_padding(ref_hair) 
@@ -196,7 +196,7 @@ def model_call(id_image_buf: io.BytesIO, ref_hair_buf: io.BytesIO, converter_sca
     image_sample, _, _ = model.Hair_Transfer(source_image=id_image_bald_np,
                                              reference_image=ref_hair_np,
                                              random_seed=-1,
-                                             step=100,
+                                             step=30,
                                              guidance_scale=guidance_scale,
                                              scale=scale,
                                              controlnet_conditioning_scale=controlnet_conditioning_scale

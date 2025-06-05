@@ -1,49 +1,70 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import api from '../config/api';
 
 export default function DiscoverResult() {
   const router = useRouter();
+  const localSearchParams = useLocalSearchParams();
   const [selectedTab, setselectedTab] = useState('DISCOVER');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(() => {
+    if (localSearchParams?.resultData) {
+      try {
+        return JSON.parse(localSearchParams.resultData);
+      } catch (e) {
+        console.error('분석 결과 데이터 파싱 오류:', e);
+        setError('분석 결과를 불러오는데 실패했습니다.');
+        return null;
+      }
+    } else {
+      setError('분석 결과 데이터가 없습니다.');
+      return null;
+    }
+  });
+  const [isRecommendationReady, setIsRecommendationReady] = useState(false);
+  const [checkingRecommendations, setCheckingRecommendations] = useState(false);
 
-  const fetchResult = () => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    let checkInterval;
 
-    api.get('/user/latest-request-id')
-      .then(res => {
-        const latestId = res.data.request_id;
-        console.log('[DEBUG] 최신 request_id:', latestId);
-        if (!latestId) {
-          setError('최근 요청이 없습니다.');
-          setLoading(false);
-          return;
+    if (checkingRecommendations && result?.request_id && !isRecommendationReady) {
+      console.log('[INFO] 추천 결과 준비 확인 시작');
+      checkInterval = setInterval(async () => {
+        try {
+          const response = await api.get(`/user/hair-recommendations/${result.request_id}`);
+          console.log('[DEBUG] 추천 확인 응답:', response.data);
+          if (response.data && response.data.length > 0) {
+            console.log('[INFO] 추천 결과 준비 완료.');
+            setIsRecommendationReady(true);
+            setCheckingRecommendations(false);
+            clearInterval(checkInterval);
+          }
+        } catch (err) {
+          console.error('[ERROR] 추천 확인 중 오류:', err);
+          if (err.response?.status === 404) {
+            console.log('[INFO] 아직 추천 결과 없음 (404). 계속 확인.');
+          } else {
+          }
         }
+      }, 5000);
+    }
 
-        api.get(`/user/result/${latestId}`)
-          .then(res2 => {
-            console.log('[DEBUG] 분석 결과:', res2.data);
-            setResult(res2.data);
-            setLoading(false);
-          })
-          .catch(err2 => {
-            const msg = err2?.response?.data?.detail || err2.message || '결과를 불러오지 못했습니다.';
-            console.error('[ERROR] 결과 요청 실패:', msg);
-            setError(msg);
-            setLoading(false);
-          });
-      })
-      .catch(err => {
-        const msg = err.message || '최신 요청을 불러오지 못했습니다.';
-        console.error('[ERROR] 최신 request_id 요청 실패:', msg);
-        setError(msg);
-        setLoading(false);
-      });
-  };
+    return () => {
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
+    };
+  }, [checkingRecommendations, result?.request_id, isRecommendationReady]);
+
+  useEffect(() => {
+    if (result?.request_id) {
+      setCheckingRecommendations(true);
+    } else if (!error) {
+      setError('분석 결과 데이터가 없습니다.');
+    }
+  }, [result?.request_id, error]);
 
   const handleTriggerRecommendation = () => {
     if (!result?.user_id || !result?.request_id) {
@@ -76,72 +97,31 @@ export default function DiscoverResult() {
     );
   };
 
-  const handleTriggerGraphRAG = () => {
-    if (!result?.user_id || !result?.request_id) {
-      const msg = 'user_id 또는 request_id가 없습니다.';
-      console.error('[ERROR]', msg);
-      setError(msg);
-      return;
-    }
-
-    const payload = {
-      user_id: result.user_id,
-      request_id: result.request_id,
-    };
-
-    console.log('[DEBUG] GraphRAG 요청 payload:', payload);
-
-    Alert.alert(
-      'GraphRAG 추천 시작',
-      `현재 user_id: ${payload.user_id}, request_id: ${payload.request_id}\n\n추천 생성에 평균적으로 1분 정도 소요됩니다.`,
-      [
-        {
-          text: '확인',
-          onPress: () => sendGraphRAGRequest(payload),
-        },
-        {
-          text: '취소',
-          style: 'cancel',
-        }
-      ]
-    );
-  };
-
   const sendGraphRAGRequest = (payload) => {
-    setLoading(true);
     api.post('/run-recommendation/', payload)
       .then(() => {
         console.log('[INFO] GraphRAG 추천 요청 성공');
-        setLoading(false);
         Alert.alert('성공', '추천이 생성되었습니다. 잠시 후 추천 결과를 확인해주세요.');
       })
       .catch(err => {
         const msg = err?.response?.data?.detail || err.message || '추천 요청 실패';
         console.error('[ERROR] GraphRAG 추천 요청 실패:', msg);
         setError(msg);
-        setLoading(false);
       });
   };
 
   const sendStableHairRequest = (payload) => {
-    setLoading(true);
     api.post('/run-stablehair/', payload)
       .then(() => {
         console.log('[INFO] 추천 요청 성공');
-        setLoading(false);
-        router.push('/discover-recomendation');
+        Alert.alert('성공', '합성 요청을 성공적으로 보냈습니다. 잠시 후 추천 가져오기 버튼을 눌러 결과를 확인해주세요.');
       })
       .catch(err => {
         const msg = err?.response?.data?.detail || err.message || '추천 요청 실패';
         console.error('[ERROR] 추천 요청 실패:', msg);
-        setError(msg);
-        setLoading(false);
+        console.warn('[WARN] 합성 요청 중 오류 발생 (표시 안함):', err);
       });
   };
-
-  useEffect(() => {
-    fetchResult();
-  }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
@@ -176,7 +156,7 @@ export default function DiscoverResult() {
             <>
               <Text style={{ color: 'red', textAlign: 'center', marginTop: 40 }}>{error}</Text>
               <TouchableOpacity
-                onPress={fetchResult}
+                onPress={() => router.push('/discover-camera')}
                 style={{
                   alignSelf: 'center',
                   marginTop: 20,
@@ -244,19 +224,20 @@ export default function DiscoverResult() {
               </View>
 
               <View style={styles.buttonContainer}>
-                <TouchableOpacity onPress={handleTriggerRecommendation} style={styles.primaryButton}>
-                  <Text style={styles.buttonText}>추천 받기</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={handleTriggerGraphRAG} style={styles.secondaryButton}>
-                  <Text style={styles.buttonText}>추천 실행</Text>
+                <TouchableOpacity
+                  onPress={() => router.push('/discover-recomendation')}
+                  style={[styles.secondaryButton, !isRecommendationReady && { opacity: 0.5 }]}
+                  disabled={!isRecommendationReady}
+                >
+                  <Text style={styles.buttonText}>추천 결과 확인하기</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={() => router.push('/discover-recomendation')}
-                  style={styles.secondaryButton}
+                  onPress={handleTriggerRecommendation}
+                  style={[styles.primaryButton, !isRecommendationReady && { opacity: 0.5 }]}
+                  disabled={!isRecommendationReady}
                 >
-                  <Text style={styles.buttonText}>추천 가져오기</Text>
+                  <Text style={styles.buttonText}>추천 헤어 합성하기</Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -284,7 +265,7 @@ const styles = StyleSheet.create({
   text: { fontSize: 16, fontWeight: '400', textAlign: 'center', top: 20 },
   imageContainer: { 
     width: '90%', 
-    height: 300, 
+    height: 400,
     top: 30, 
     borderColor: '#FFBCC2', 
     borderWidth: 2, 
