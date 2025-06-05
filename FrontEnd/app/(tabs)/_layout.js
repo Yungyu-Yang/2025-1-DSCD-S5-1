@@ -1,4 +1,14 @@
 import { Tabs } from 'expo-router';
+import { LogBox } from 'react-native';
+
+LogBox.ignoreAllLogs(); 
+
+
+console.log = () => {};
+console.info = () => {};
+console.warn = () => {};
+console.error = () => {};
+
 
 export default function TabLayout() {
   return (
