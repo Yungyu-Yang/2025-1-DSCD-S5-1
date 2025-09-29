@@ -58,8 +58,7 @@
 
 ## 📎 산출물
 
--   [최종 보고서 PDF](./최종보고서_1_S5.pdf)\
 -   [최종 발표
-    자료](https://github.com/Yungyu-Yang/2025-1-DSCD-S5-1/blob/main/%EC%B5%9C%EC%A2%85%EB%B0%9C%ED%91%9C_PPT_1_S5.pdf)\
+    자료](https://github.com/Yungyu-Yang/2025-1-DSCD-S5-1/blob/main/%EC%B5%9C%EC%A2%85%EB%B0%9C%ED%91%9C_PPT_1_S5.pdf)
 -   [시연
     영상](https://www.youtube.com/watch?v=Q5L2FSPs6_0&feature=youtu.be)
