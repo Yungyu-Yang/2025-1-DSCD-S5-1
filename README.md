@@ -4,19 +4,19 @@
 
 ## 👥 팀원
 
--   양윤규 (팀장) -- API 연동 및 통합 테스트, 프로젝트 일정 관리\
--   김민열 -- GraphRAG 기반 추천 알고리즘 개발, VectorDB 구축\
--   김홍재 -- 얼굴형 감지 및 헤어 시뮬레이션 모델 구현\
--   이설후 -- React Native 기반 프론트엔드 개발, UI/UX 설계\
+-   양윤규 (팀장) -- API 연동 및 통합 테스트, 프로젝트 일정 관리
+-   김민열 -- GraphRAG 기반 추천 알고리즘 개발, VectorDB 구축
+-   김홍재 -- 얼굴형 감지 및 헤어 시뮬레이션 모델 구현
+-   이설후 -- React Native 기반 프론트엔드 개발, UI/UX 설계
 -   정선열 -- 데이터베이스 구축 및 관리, API 연동
 
 ------------------------------------------------------------------------
 
 ## 📌 프로젝트 개요
 
-**Mohitto**는 얼굴형, 피부톤, 선호도 등 개인 정보를 AI로 분석하여\
-- **맞춤형 헤어스타일 추천**\
-- **미용실 연결 추천**\
+**Mohitto**는 얼굴형, 피부톤, 선호도 등 개인 정보를 AI로 분석하여
+- **맞춤형 헤어스타일 추천**
+- **미용실 연결 추천**
 - **Stable-Hair 기반 시뮬레이션 이미지 생성**
 
 을 제공하는 모바일 애플리케이션입니다.
@@ -25,27 +25,27 @@
 
 ## 🚀 주요 기능
 
-1.  **얼굴 분석**: MTCNN, MediaPipe, ConvNeXt 기반 얼굴형/피부톤 분석\
-2.  **헤어스타일 추천**: GraphRAG + 리뷰 데이터 기반 설명 가능한 추천\
-3.  **미용실 추천**: 거리/리뷰/평점 기반 Rule-Based 추천\
+1.  **얼굴 분석**: MTCNN, MediaPipe, ConvNeXt 기반 얼굴형/피부톤 분석
+2.  **헤어스타일 추천**: GraphRAG + 리뷰 데이터 기반 설명 가능한 추천
+3.  **미용실 추천**: 거리/리뷰/평점 기반 Rule-Based 추천
 4.  **시뮬레이션**: Stable-Hair 기반 자연스러운 합성 이미지
 
 ------------------------------------------------------------------------
 
 ## 💡 차별점
 
--   성별 제한 없는 범용 서비스\
--   GraphRAG 기반 **추천 근거 제공**\
--   최신 Stable-Diffusion 계열 합성 기술 적용\
+-   성별 제한 없는 범용 서비스
+-   GraphRAG 기반 **추천 근거 제공**
+-   최신 Stable-Diffusion 계열 합성 기술 적용
 -   **리뷰 감성 분석 + 거리/비용 고려**한 정교한 미용실 추천
 
 ------------------------------------------------------------------------
 
 ## 🛠 기술 스택
 
--   **Frontend**: React Native (Expo, TypeScript), Figma\
--   **Backend**: FastAPI, MySQL (AWS RDS)\
--   **AI/ML**: MTCNN, MediaPipe, ConvNeXt, Stable-Hair, GraphRAG\
+-   **Frontend**: React Native (Expo, TypeScript), Figma
+-   **Backend**: FastAPI, MySQL (AWS RDS)
+-   **AI/ML**: MTCNN, MediaPipe, ConvNeXt, Stable-Hair, GraphRAG
 -   **Infra**: AWS EC2, S3, Docker, GitHub Actions
 
 ------------------------------------------------------------------------
